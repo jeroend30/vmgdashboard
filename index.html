@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard VMG</title>
+  <title>Jotihunt Dashboard - VMG</title>
   <style>
     :root {
       --bg-overlay: rgba(15, 23, 42, 0.82);
@@ -287,13 +287,6 @@
       font-weight: 700;
       color: var(--accent);
       letter-spacing: 0.5px;
-    }
-
-    .credits-tag {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      opacity: 0.7;
-      margin-top: 0.15rem;
     }
 
     .logo-container {
@@ -717,6 +710,17 @@
       padding: 1.25rem 1rem;
       text-align: center;
       background: radial-gradient(circle at center, rgba(56, 189, 248, 0.05) 0%, transparent 70%);
+      position: relative;
+    }
+
+    .credits-tag-corner {
+      position: absolute;
+      bottom: 0.4rem;
+      right: 0.6rem;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      opacity: 0.6;
+      letter-spacing: 0.3px;
     }
 
     .countdown-title-wrapper {
@@ -1047,7 +1051,6 @@
   <header>
     <div class="header-left">
       <h1>Jotihunt Dashboard</h1>
-      <div class="credits-tag">Gemaakt door Jeroen</div>
     </div>
 
     <div class="logo-container">
@@ -1177,6 +1180,7 @@
               <span class="time-label">Sec</span>
             </div>
           </div>
+          <div class="credits-tag-corner">Gemaakt door Jeroen</div>
         </div>
       </div>
     </div>
