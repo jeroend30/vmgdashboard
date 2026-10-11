@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="nl" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vossenjacht Live Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Explicit map container sizing and styling */
+        #map { 
+            width: 100%; 
+            height: 100%; 
+            min-height: 400px; 
+            z-index: 10; 
+        }
+        .custom-popup .leaflet-popup-content-wrapper {
+            background: #1e293b;
+            color: #f8fafc;
+            border-radius: 0.75rem;
+            padding: 0.5rem;
+            border: 1px solid #334155;
+        }
+        .custom-popup .leaflet-popup-tip {
+            background: #1e293b;
+        }
+    </style>
+</head>
+<body class="h-full bg-slate-900 text-slate-100 flex flex-col md:flex-row overflow-hidden m-0 p-0">
+
+    <!-- Sidebar / Control Panel -->
+    <aside class="w-full md:w-96 bg-slate-800 border-r border-slate-700 flex flex-col z-20 shadow-2xl h-1/2 md:h-full flex-shrink-0">
+        <!-- Header -->
+        <div class="p-4 bg-slate-800/90 backdrop-blur border-b border-slate-700 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-amber-600 p-2.5 rounded-xl shadow-lg shadow-amber-600/30 text-white">
+                    <i class="fa-solid fa-paw text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-white leading-tight">Vossenjacht Tracker</h1>
+                    <p class="text-xs text-amber-400 font-medium"><span id="active-count">0</span> vossen actief</p>
+                </div>
+            </div>
+            <button onclick="openAddModal()" class="bg-amber-600 hover:bg-amber-500 text-white px-3.5 py-2 rounded-xl text-sm font-semibold transition shadow-lg shadow-amber-600/20 flex items-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Vos</span>
+            </button>
+        </div>
+
+        <!-- Quick Controls / Simulation -->
+        <div class="p-3 bg-slate-800/50 border-b border-slate-700 flex items-center justify-between gap-2">
+            <button onclick="toggleSimulation()" id="sim-btn" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 shadow cursor-pointer">
+                <i class="fa-solid fa-play" id="sim-icon"></i> <span id="sim-text">Start Simulatie</span>
+            </button>
+            <button onclick="centerMapOnAll()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-crosshairs"></i> Alles tonen
+            </button>
+        </div>
+
+        <!-- Fox List Container -->
+        <div id="fox-list" class="flex-1 overflow-y-auto p-3 space-y-3">
+            <!-- Dynamic fox cards will be injected here -->
+        </div>
+
+        <!-- Footer / Legend -->
+        <div class="p-3 bg-slate-900/60 border-t border-slate-700 text-xs text-slate-400 flex justify-between items-center">
+            <span>Laatste update: <span id="last-update-time">Nooit</span></span>
+            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Live Verbonden</span>
+        </div>
+    </aside>
+
+    <!-- Main Map Area -->
+    <main class="flex-1 h-1/2 md:h-full relative flex-grow">
+        <!-- Map Control Overlay Buttons -->
+        <div class="absolute top-4 right-4 z-30 flex flex-col gap-2">
+            <button onclick="switchBaseLayer('standard')" id="btn-std" class="bg-slate-800/90 backdrop-blur hover:bg-slate-700 text-white px-3 py-2 rounded-xl text-xs font-medium shadow-lg border border-slate-700 transition cursor-pointer">
+                <i class="fa-solid fa-map mr-1"></i> Standaard
+            </button>
+            <button onclick="switchBaseLayer('satellite')" id="btn-sat" class="bg-slate-800/90 backdrop-blur hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl text-xs font-medium shadow-lg border border-slate-700 transition cursor-pointer">
+                <i class="fa-solid fa-satellite mr-1"></i> Satelliet
+            </button>
+        </div>
+
+        <!-- Leaflet Map Container -->
+        <div id="map"></div>
+    </main>
+
+    <!-- Add/Edit Fox Modal -->
+    <div id="fox-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div class="p-4 bg-slate-800 border-b border-slate-700 flex justify-between items-center">
+                <h3 id="modal-title" class="font-bold text-lg text-white">Nieuwe Vos / Basis toevoegen</h3>
+                <button onclick="closeAddModal()" class="text-slate-400 hover:text-white p-1 rounded-lg cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form id="fox-form" onsubmit="handleFormSubmit(event)" class="p-4 space-y-4">
+                <input type="hidden" id="fox-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Naam / Identificatie</label>
+                    <input type="text" id="fox-name" required placeholder="bijv. Vos 3 of Basis Zuid" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Breedtegraad (Lat)</label>
+                        <input type="number" step="any" id="fox-lat" required placeholder="52.155" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Lengtegraad (Lng)</label>
+                        <input type="number" step="any" id="fox-lng" required placeholder="5.387" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Frequentie / Kanaal</label>
+                        <input type="text" id="fox-freq" required placeholder="144.800 MHz" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Status</label>
+                        <select id="fox-status" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                            <option value="Actief">Actief (Zendend)</option>
+                            <option value="Verstopt">Verstopt</option>
+                            <option value="Gevonden">Gevonden</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Batterij (%)</label>
+                        <input type="number" min="0" max="100" id="fox-battery" value="100" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Signaalsterkte (RSS)</label>
+                        <input type="text" id="fox-signal" value="Sterk (-65dBm)" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+                <p class="text-xs text-slate-400 italic">Tip: Klik ergens op de kaart om coördinaten automatisch in te vullen.</p>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeAddModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded-xl text-sm font-semibold transition cursor-pointer">Annuleren</button>
+                    <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition shadow-lg shadow-amber-600/20 cursor-pointer">Opslaan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        // Initial state data for the fox hunting group
+        let foxes = [
+            {
+                id: '1',
+                name: 'Vos 1 (Alfa)',
+                lat: 52.1561,
+                lng: 5.3878,
+                freq: '144.800 MHz',
+                status: 'Actief',
+                battery: 85,
+                signal: 'Sterk (-54dBm)',
+                lastSeen: '1 minuut geleden',
+                color: '#f59e0b'
+            },
+            {
+                id: '2',
+                name: 'Vos 2 (Bravo)',
+                lat: 52.1420,
+                lng: 5.4120,
+                freq: '144.850 MHz',
+                status: 'Verstopt',
+                battery: 42,
+                signal: 'Matig (-78dBm)',
+                lastSeen: '6 minuten geleden',
+                color: '#3b82f6'
+            },
+            {
+                id: '3',
+                name: 'Basisstation HQ',
+                lat: 52.1625,
+                lng: 5.3700,
+                freq: '145.500 MHz',
+                status: 'Actief',
+                battery: 98,
+                signal: 'Uitstekend (-40dBm)',
+                lastSeen: 'Nu',
+                color: '#10b981'
+            }
+        ];
+
+        let map;
+        let markers = {};
+        let standardLayer, satelliteLayer;
+        let simulationInterval = null;
+        let isSimulating = false;
+
+        // Initialize Map once DOM is fully loaded
+        document.addEventListener("DOMContentLoaded", function() {
+            // Setup Leaflet Map centered in the Netherlands
+            map = L.map('map', { zoomControl: false }).setView([52.155, 5.387], 13);
+
+            // Add zoom control to top-left
+            L.control.zoom({ position: 'topleft' }).addTo(map);
+
+            // Define tile layers
+            standardLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            });
+
+            satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 19,
+                attribution: 'Tiles &copy; Esri'
+            });
+
+            // Set default layer
+            standardLayer.addTo(map);
+
+            // Force leaflet to recalculate size after render
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 250);
+
+            // Map click listener to add/pinpoint new fox coordinates easily
+            map.on('click', function(e) {
+                let clickModeLat = e.latlng.lat.toFixed(4);
+                let clickModeLng = e.latlng.lng.toFixed(4);
+                
+                document.getElementById('fox-id').value = '';
+                document.getElementById('modal-title').innerText = 'Nieuwe Vos / Locatie toevoegen';
+                document.getElementById('fox-name').value = '';
+                document.getElementById('fox-lat').value = clickModeLat;
+                document.getElementById('fox-lng').value = clickModeLng;
+                document.getElementById('fox-freq').value = '144.900 MHz';
+                document.getElementById('fox-battery').value = '100';
+                document.getElementById('fox-signal').value = 'Optimaal (-50dBm)';
+                document.getElementById('fox-status').value = 'Actief';
+                
+                document.getElementById('fox-modal').classList.remove('hidden');
+            });
+
+            renderApp();
+            updateLastUpdateTime();
+        });
+
+        // Switch between standard and satellite view
+        function switchBaseLayer(type) {
+            if (type === 'standard') {
+                if (map.hasLayer(satelliteLayer)) map.removeLayer(satelliteLayer);
+                standardLayer.addTo(map);
+                document.getElementById('btn-std').className = "bg-slate-800/90 backdrop-blur hover:bg-slate-700 text-white px-3 py-2 rounded-xl text-xs font-medium shadow-lg border border-slate-700 transition cursor-pointer";
+                document.getElementById('btn-sat').className = "bg-slate-800/90 backdrop-blur hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl text-xs font-medium shadow-lg border border-slate-700 transition cursor-pointer";
+            } else {
+                if (map.hasLayer(standardLayer)) map.removeLayer(standardLayer);
+                satelliteLayer.addTo(map);
+                document.getElementById('btn-sat').className = "bg-slate-800/90 backdrop-blur hover:bg-slate-700 text-white px-3 py-2 rounded-xl text-xs font-medium shadow-lg border border-slate-700 transition cursor-pointer";
+                document.getElementById('btn-std').className = "bg-slate-800/90 backdrop-blur hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl text-xs font-medium shadow-lg border border-slate-700 transition cursor-pointer";
+            }
+        }
+
+        // Render the UI list and update markers on the map
+        function renderApp() {
+            const listContainer = document.getElementById('fox-list');
+            listContainer.innerHTML = '';
+            
+            document.getElementById('active-count').innerText = foxes.filter(f => f.status === 'Actief').length;
+
+            // Clear existing markers
+            for (let id in markers) {
+                map.removeLayer(markers[id]);
+            }
+            markers = {};
+
+            foxes.forEach(fox => {
+                let statusColor = 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+                if (fox.status === 'Verstopt') statusColor = 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+                if (fox.status === 'Gevonden') statusColor = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+
+                // Render Sidebar Card
+                const card = document.createElement('div');
+                card.className = "bg-slate-900/80 border border-slate-700 rounded-2xl p-3.5 hover:border-amber-500/50 transition shadow-md group";
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 rounded-full shadow-md" style="background-color: ${fox.color}"></span>
+                            <h4 class="font-bold text-sm text-white">${fox.name}</h4>
+                        </div>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full border font-semibold ${statusColor}">${fox.status}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs text-slate-300 mb-3 bg-slate-800/60 p-2 rounded-xl">
+                        <div><i class="fa-solid fa-signal text-amber-400 mr-1"></i> ${fox.freq}</div>
+                        <div><i class="fa-solid fa-battery-three-quarters text-emerald-400 mr-1"></i> ${fox.battery}%</div>
+                        <div class="col-span-2"><i class="fa-solid fa-location-dot text-rose-400 mr-1"></i> ${fox.lat.toFixed(4)}, ${fox.lng.toFixed(4)}</div>
+                        <div class="col-span-2 text-[11px] text-slate-400"><i class="fa-solid fa-clock mr-1"></i> Laatstgezien: ${fox.lastSeen}</div>
+                    </div>
+                    <div class="flex items-center justify-between gap-1.5 pt-1 border-t border-slate-800">
+                        <button onclick="zoomToFox('${fox.id}')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 px-2 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1 cursor-pointer">
+                            <i class="fa-solid fa-eye text-amber-400"></i> Zoom
+                        </button>
+                        <button onclick="pingFox('${fox.id}')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 px-2 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1 cursor-pointer" title="Peiling uitvoeren">
+                            <i class="fa-solid fa-tower-broadcast text-emerald-400"></i> Peil
+                        </button>
+                        <button onclick="editFox('${fox.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-2.5 rounded-lg text-xs transition cursor-pointer">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button onclick="deleteFox('${fox.id}')" class="bg-slate-800 hover:bg-rose-900/40 text-slate-400 hover:text-rose-400 py-1.5 px-2.5 rounded-lg text-xs transition cursor-pointer">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+
+                // Render Leaflet Marker
+                const customIcon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div style="background-color: ${fox.color}; width: 32px; height: 32px;" class="rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white font-bold text-xs"><i class="fa-solid fa-paw"></i></div>`,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16],
+                    popupAnchor: [0, -16]
+                });
+
+                const marker = L.marker([fox.lat, fox.lng], { icon: customIcon }).addTo(map);
+                marker.bindPopup(`
+                    <div class="p-1">
+                        <h4 class="font-bold text-sm text-white mb-1">${fox.name}</h4>
+                        <p class="text-xs text-slate-300 mb-1"><strong class="text-amber-400">Status:</strong> ${fox.status}</p>
+                        <p class="text-xs text-slate-300 mb-1"><strong class="text-amber-400">Freq:</strong> ${fox.freq}</p>
+                        <p class="text-xs text-slate-300 mb-1"><strong class="text-amber-400">Signaal:</strong> ${fox.signal}</p>
+                        <p class="text-xs text-slate-300"><strong class="text-amber-400">Locatie:</strong> ${fox.lat.toFixed(4)}, ${fox.lng.toFixed(4)}</p>
+                    </div>
+                `, { className: 'custom-popup' });
+
+                markers[fox.id] = marker;
+            });
+        }
+
+        function zoomToFox(id) {
+            const fox = foxes.find(f => f.id === id);
+            if (fox) {
+                map.setView([fox.lat, fox.lng], 16, { animate: true, duration: 0.8 });
+                markers[id].openPopup();
+            }
+        }
+
+        function centerMapOnAll() {
+            if (foxes.length === 0) return;
+            const bounds = L.latLngBounds(foxes.map(f => [f.lat, f.lng]));
+            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+        }
+
+        function pingFox(id) {
+            const fox = foxes.find(f => f.id === id);
+            if (fox) {
+                fox.lat += (Math.random() - 0.5) * 0.002;
+                fox.lng += (Math.random() - 0.5) * 0.002;
+                fox.lastSeen = 'Zojuist gepeild';
+                updateLastUpdateTime();
+                renderApp();
+            }
+        }
+
+        function openAddModal() {
+            document.getElementById('fox-id').value = '';
+            document.getElementById('modal-title').innerText = 'Nieuwe Vos / Locatie toevoegen';
+            document.getElementById('fox-form').reset();
+            document.getElementById('fox-battery').value = '100';
+            document.getElementById('fox-signal').value = 'Sterk (-50dBm)';
+            document.getElementById('fox-modal').classList.remove('hidden');
+        }
+
+        function editFox(id) {
+            const fox = foxes.find(f => f.id === id);
+            if (fox) {
+                document.getElementById('fox-id').value = fox.id;
+                document.getElementById('modal-title').innerText = 'Bewerk ' + fox.name;
+                document.getElementById('fox-name').value = fox.name;
+                document.getElementById('fox-lat').value = fox.lat;
+                document.getElementById('fox-lng').value = fox.lng;
+                document.getElementById('fox-freq').value = fox.freq;
+                document.getElementById('fox-status').value = fox.status;
+                document.getElementById('fox-battery').value = fox.battery;
+                document.getElementById('fox-signal').value = fox.signal;
+                document.getElementById('fox-modal').classList.remove('hidden');
+            }
+        }
+
+        function closeAddModal() {
+            document.getElementById('fox-modal').classList.add('hidden');
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('fox-id').value;
+            const name = document.getElementById('fox-name').value;
+            const lat = parseFloat(document.getElementById('fox-lat').value);
+            const lng = parseFloat(document.getElementById('fox-lng').value);
+            const freq = document.getElementById('fox-freq').value;
+            const status = document.getElementById('fox-status').value;
+            const battery = parseInt(document.getElementById('fox-battery').value);
+            const signal = document.getElementById('fox-signal').value;
+
+            const colors = ['#f59e0b', '#3b82f6', '#10b981', '#ec4899', '#8b5cf6', '#06b6d4'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+            if (id) {
+                const fox = foxes.find(f => f.id === id);
+                if (fox) {
+                    fox.name = name;
+                    fox.lat = lat;
+                    fox.lng = lng;
+                    fox.freq = freq;
+                    fox.status = status;
+                    fox.battery = battery;
+                    fox.signal = signal;
+                    fox.lastSeen = 'Zojuist bijgewerkt';
+                }
+            } else {
+                const newFox = {
+                    id: Date.now().toString(),
+                    name: name,
+                    lat: lat,
+                    lng: lng,
+                    freq: freq,
+                    status: status,
+                    battery: battery,
+                    signal: signal,
+                    lastSeen: 'Zojuist toegevoegd',
+                    color: randomColor
+                };
+                foxes.push(newFox);
+            }
+
+            closeAddModal();
+            updateLastUpdateTime();
+            renderApp();
+        }
+
+        function deleteFox(id) {
+            if (confirm('Weet je zeker dat je deze vos wilt verwijderen?')) {
+                foxes = foxes.filter(f => f.id !== id);
+                updateLastUpdateTime();
+                renderApp();
+            }
+        }
+
+        function toggleSimulation() {
+            isSimulating = !isSimulating;
+            const btnText = document.getElementById('sim-text');
+            const btnIcon = document.getElementById('sim-icon');
+            const simBtn = document.getElementById('sim-btn');
+
+            if (isSimulating) {
+                btnText.innerText = 'Stop Simulatie';
+                btnIcon.className = 'fa-solid fa-pause';
+                simBtn.className = 'flex-1 bg-rose-600 hover:bg-rose-500 text-white px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 shadow cursor-pointer';
+                
+                simulationInterval = setInterval(() => {
+                    foxes.forEach(fox => {
+                        if (fox.status === 'Actief' || fox.status === 'Verstopt') {
+                            fox.lat += (Math.random() - 0.5) * 0.003;
+                            fox.lng += (Math.random() - 0.5) * 0.003;
+                            fox.lastSeen = 'Net automatisch verplaatst';
+                        }
+                    });
+                    updateLastUpdateTime();
+                    renderApp();
+                }, 4000);
+            } else {
+                btnText.innerText = 'Start Simulatie';
+                btnIcon.className = 'fa-solid fa-play';
+                simBtn.className = 'flex-1 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 shadow cursor-pointer';
+                clearInterval(simulationInterval);
+            }
+        }
+
+        function updateLastUpdateTime() {
+            const now = new Date();
+            document.getElementById('last-update-time').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+    </script>
+</body>
+</html>
