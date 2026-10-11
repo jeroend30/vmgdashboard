@@ -63,6 +63,15 @@
       padding: 1rem;
     }
 
+    .auth-container {
+      display: flex;
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 880px;
+      justify-content: center;
+      align-items: stretch;
+    }
+
     .auth-box {
       background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
       border: 1px solid rgba(56, 189, 248, 0.3);
@@ -70,12 +79,15 @@
       -webkit-backdrop-filter: blur(20px);
       border-radius: 20px;
       padding: 2.5rem 2rem;
-      width: 100%;
+      flex: 1;
       max-width: 420px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(56, 189, 248, 0.15);
       text-align: center;
       position: relative;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
     .auth-box::before {
@@ -88,10 +100,24 @@
       background: linear-gradient(90deg, #38bdf8, #818cf8, #38bdf8);
     }
 
+    .auth-box-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .auth-icon {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+    }
+
     .auth-box h2 {
       color: #fff;
-      font-size: 1.75rem;
-      margin-bottom: 1.75rem;
+      font-size: 1.5rem;
       font-weight: 800;
       letter-spacing: 0.5px;
       text-shadow: 0 2px 4px rgba(0,0,0,0.3);
@@ -891,6 +917,7 @@
       .logo-container { position: relative; left: auto; transform: none; margin: 0.5rem 0; }
       header { flex-direction: column; gap: 0.5rem; text-align: center; }
       .header-right { flex-direction: column; gap: 0.5rem; }
+      .auth-container { flex-direction: column; align-items: center; }
     }
   </style>
 </head>
@@ -898,16 +925,38 @@
 
   <!-- Inlog / Registratie Scherm -->
   <div id="auth-modal" class="auth-overlay">
-    <div class="auth-box">
-      <h2>Jotihunt 2026</h2>
-      <form class="auth-form" onsubmit="handleAuthSubmit(event)">
-        <div class="input-group">
-          <label for="password-input">Wachtwoord</label>
-          <input type="password" id="password-input" required autocomplete="current-password" placeholder="Voer je wachtwoord in">
+    <div class="auth-container">
+      <!-- Links: Inlog Dashboard -->
+      <div class="auth-box">
+        <div class="auth-box-header">
+          <img src="https://cdn-icons-png.flaticon.com/256/6821/6821002.png" alt="Inlog Dashboard Icon" class="auth-icon">
+          <h2>Inlog Dashboard</h2>
         </div>
-        <button type="submit" id="auth-submit-btn" class="btn-auth">Inloggen</button>
-        <div id="auth-error" class="auth-error">Onjuist wachtwoord.</div>
-      </form>
+        <form class="auth-form" onsubmit="handleAuthSubmit(event)">
+          <div class="input-group">
+            <label for="password-input">Wachtwoord</label>
+            <input type="password" id="password-input" required autocomplete="current-password" placeholder="Voer je wachtwoord in">
+          </div>
+          <button type="submit" id="auth-submit-btn" class="btn-auth">Inloggen</button>
+          <div id="auth-error" class="auth-error">Onjuist wachtwoord.</div>
+        </form>
+      </div>
+
+      <!-- Rechts: Inlog Pin Point -->
+      <div class="auth-box">
+        <div class="auth-box-header">
+          <img src="https://cdn-icons-png.flaticon.com/512/6619/6619221.png" alt="Inlog Pin Point Icon" class="auth-icon">
+          <h2>Inlog Pin Point</h2>
+        </div>
+        <form class="auth-form" onsubmit="handleTrackerAuthSubmit(event)">
+          <div class="input-group">
+            <label for="tracker-password-input">Wachtwoord</label>
+            <input type="password" id="tracker-password-input" required autocomplete="current-password" placeholder="Voer je wachtwoord in">
+          </div>
+          <button type="submit" id="tracker-auth-submit-btn" class="btn-auth">Naar Tracker</button>
+          <div id="tracker-auth-error" class="auth-error">Onjuist wachtwoord.</div>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -1177,8 +1226,10 @@
     function initAuth() {
       const modal = document.getElementById('auth-modal');
       const errorEl = document.getElementById('auth-error');
+      const trackerErrorEl = document.getElementById('tracker-auth-error');
 
       if (errorEl) errorEl.style.display = 'none';
+      if (trackerErrorEl) trackerErrorEl.style.display = 'none';
 
       if (sessionStorage.getItem('joti_authenticated') === 'true') {
         modal.style.display = 'none';
@@ -1207,9 +1258,29 @@
       }
     }
 
+    function handleTrackerAuthSubmit(e) {
+      e.preventDefault();
+      const passVal = document.getElementById('tracker-password-input').value;
+      const errorEl = document.getElementById('tracker-auth-error');
+
+      if (!passVal) return;
+
+      if (passVal === 'rsa257') {
+        window.location.href = 'https://jeroend30.github.io/vmgdashboard/vossenjacht_tracker.html';
+      } else {
+        if (errorEl) {
+          errorEl.style.display = 'block';
+          errorEl.innerText = 'Onjuist wachtwoord.';
+        }
+      }
+    }
+
     function logout() {
       sessionStorage.removeItem('joti_authenticated');
       document.getElementById('password-input').value = '';
+      if (document.getElementById('tracker-password-input')) {
+        document.getElementById('tracker-password-input').value = '';
+      }
       initAuth();
     }
 
