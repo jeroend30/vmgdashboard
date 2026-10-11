@@ -296,7 +296,7 @@
         📍 Opgeslagen Vossen Pints (<span id="pin-count">0</span>)
       </div>
       <div class="sidebar-content" id="sidebar-pins-container">
-        <em>Nog geen pins geplaatst. Klik op de kaart om een vos te pinpointen.</em>
+        <em>Laden van pins...</em>
       </div>
     </div>
   </div>
@@ -305,24 +305,49 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
   <script>
-    // Initialiseer de map (gecentreerd op Nederland)
     const map = L.map('map').setView([52.1326, 5.2913], 8);
 
-    // OpenStreetMap tegel (Geen API-key benodigd)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    let pins = JSON.parse(localStorage.getItem('joti_pin_points')) || [];
+    let pins = [];
     let mapMarkers = [];
 
-    function savePins() {
+    // JSONbin endpoint voor gedeelde opslag
+    const BIN_URL = 'https://api.jsonbin.io/v3/b/67000000ae19d17d5c500000/latest'; 
+    // Opmerking: we gebruiken lokale simulatie als fallback of direct online laden
+    // Om het helemaal robuust en zonder API-sleutel te maken via een gratis public bin:
+    
+    async function loadPins() {
+      try {
+        const response = await fetch('https://api.npoint.io/462f5592182bb19b8893'); // Gedeelde openbare opslag
+        if (response.ok) {
+          const data = await response.json();
+          pins = data.pins || [];
+        }
+      } catch (e) {
+        console.warn('Kon online pins niet laden, val terug op lokaal:', e);
+        pins = JSON.parse(localStorage.getItem('joti_pin_points')) || [];
+      }
+      renderPins();
+    }
+
+    async function savePinsOnline() {
+      try {
+        await fetch('https://api.npoint.io/462f5592182bb19b8893', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pins: pins })
+        });
+      } catch (e) {
+        console.warn('Kon online niet opslaan:', e);
+      }
       localStorage.setItem('joti_pin_points', JSON.stringify(pins));
     }
 
     function renderPins() {
-      // Verwijder oude markers van de map
       mapMarkers.forEach(m => map.removeLayer(m));
       mapMarkers = [];
 
@@ -337,12 +362,10 @@
       container.innerHTML = '';
 
       pins.forEach((pin, index) => {
-        // Maak marker op de kaart
         const marker = L.marker([pin.lat, pin.lng]).addTo(map);
         marker.bindPopup(`<b>${pin.title}</b><br>${pin.note || 'Geen opmerking'}`);
         mapMarkers.push(marker);
 
-        // Voeg toe aan sidebar
         const card = document.createElement('div');
         card.className = 'pin-card';
         card.onclick = () => {
@@ -363,7 +386,6 @@
       });
     }
 
-    // Klik op de kaart om een nieuwe pin toe te voegen via een popup formulier
     map.on('click', function(e) {
       const { lat, lng } = e.latlng;
 
@@ -371,7 +393,7 @@
         <div class="popup-form">
           <h4>Vos Pinpointen</h4>
           <input type="text" id="new-pin-title" placeholder="Titel (bijv. Vos Alpha)" required />
-          <textarea id="new-pin-note" placeholder="Opmerking (bijv. Laatst gezien richting het oosten)" rows="2"></textarea>
+          <textarea id="new-pin-note" placeholder="Opmerking (bijv. Laatst gezien)" rows="2"></textarea>
           <button onclick="addNewPin(${lat}, ${lng})">Opslaan</button>
         </div>
       `;
@@ -382,7 +404,7 @@
         .openOn(map);
     });
 
-    window.addNewPin = function(lat, lng) {
+    window.addNewPin = async function(lat, lng) {
       const titleInput = document.getElementById('new-pin-title');
       const noteInput = document.getElementById('new-pin-note');
 
@@ -395,23 +417,25 @@
       }
 
       pins.push({ lat, lng, title, note });
-      savePins();
+      await savePinsOnline();
       renderPins();
       map.closePopup();
     };
 
-    window.deletePin = function(index) {
+    window.deletePin = async function(index) {
       if (confirm('Weet je zeker dat je deze pin wilt verwijderen?')) {
         pins.splice(index, 1);
-        savePins();
+        await savePinsOnline();
         renderPins();
       }
     };
 
-    // Laad bestaande pins bij opstarten
-    renderPins();
+    // Laad alle pins bij het openen van de pagina
+    loadPins();
 
-    // Zorg ervoor dat de kaart de juiste grootte berekent
+    // Automatisch elke 10 seconden verversen zodat je elkaars pinnen live ziet binnenkomen
+    setInterval(loadPins, 10000);
+
     setTimeout(() => {
       map.invalidateSize();
     }, 100);
