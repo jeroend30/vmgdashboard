@@ -58,9 +58,18 @@
       -webkit-backdrop-filter: blur(12px);
       z-index: 9999;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       padding: 1rem;
+    }
+
+    .auth-main-logo {
+      max-height: 240px;
+      width: auto;
+      object-fit: contain;
+      margin-bottom: 2rem;
+      filter: drop-shadow(0 4px 16px rgba(0,0,0,0.6));
     }
 
     .auth-container {
@@ -925,6 +934,7 @@
 
   <!-- Inlog / Registratie Scherm -->
   <div id="auth-modal" class="auth-overlay">
+    <img src="https://images.squarespace-cdn.com/content/v1/51cdafc4e4b09eb676a64e68/1455062782638-O5OZ6Q2LKGVS7EVFENUH/image-asset.png" alt="Scouting Logo" class="auth-main-logo">
     <div class="auth-container">
       <!-- Links: Inlog Dashboard -->
       <div class="auth-box">
@@ -995,11 +1005,8 @@
         <button class="btn-popup" style="width: 100%; justify-content: center;" onclick="toggleBackground()">⬛ Verwijder Achtergrond</button>
         
         <div class="status-bar-box" style="margin-top: 0.5rem;">
-          <div>
-            Laatste update: <span id="last-update" class="status-bar-time">Laden...</span>
-          </div>
           <div class="auto-refresh-tag">
-            <span class="live-pulse"></span> Auto-refresh: 1m
+            <span class="live-pulse"></span> Auto refresh: 30s
           </div>
         </div>
 
@@ -1133,13 +1140,20 @@
   <div class="dashboard-container">
     <!-- LINKS: Berichten -->
     <div class="column">
-      <div class="card-panel full-height">
+      <div class="card-panel full-height" style="display: flex; flex-direction: column;">
         <div class="column-header">
           <span>Alle Berichten</span>
           <span class="badge" id="count-articles">0</span>
         </div>
-        <div class="column-content" id="container-articles">
+        <div class="column-content" id="container-articles" style="flex: 1;">
           <em>Laden...</em>
+        </div>
+        <div style="padding: 0.75rem; border-top: 1px solid var(--card-border); background: rgba(15, 23, 42, 0.4);">
+          <div class="status-bar-box" style="align-items: center;">
+            <div class="auto-refresh-tag">
+              <span class="live-pulse"></span> Auto refresh: 30s
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1223,6 +1237,21 @@
   </div>
 
   <script>
+    function applyAdminButtonState() {
+      const adminBtn = document.getElementById('admin-header-btn');
+      const activePassword = sessionStorage.getItem('joti_auth_password');
+
+      if (!adminBtn) return;
+
+      if (activePassword === 'rsa257') {
+        adminBtn.style.opacity = '0.5';
+        adminBtn.style.pointerEvents = 'none';
+      } else {
+        adminBtn.style.opacity = '1';
+        adminBtn.style.pointerEvents = 'auto';
+      }
+    }
+
     function initAuth() {
       const modal = document.getElementById('auth-modal');
       const errorEl = document.getElementById('auth-error');
@@ -1233,6 +1262,7 @@
 
       if (sessionStorage.getItem('joti_authenticated') === 'true') {
         modal.style.display = 'none';
+        applyAdminButtonState();
         return;
       }
 
@@ -1246,10 +1276,12 @@
 
       if (!passVal) return;
 
-      if (passVal === 'rsa257') {
+      if (passVal === 'rsa257' || passVal === 'Deurloo!') {
         sessionStorage.setItem('joti_authenticated', 'true');
+        sessionStorage.setItem('joti_auth_password', passVal);
         document.getElementById('auth-modal').style.display = 'none';
         if (errorEl) errorEl.style.display = 'none';
+        applyAdminButtonState();
       } else {
         if (errorEl) {
           errorEl.style.display = 'block';
@@ -1265,7 +1297,7 @@
 
       if (!passVal) return;
 
-      if (passVal === 'rsa257') {
+      if (passVal === 'rsa257' || passVal === 'Deurloo!') {
         window.location.href = 'https://jeroend30.github.io/vmgdashboard/vossenjacht_tracker.html';
       } else {
         if (errorEl) {
@@ -1277,10 +1309,12 @@
 
     function logout() {
       sessionStorage.removeItem('joti_authenticated');
+      sessionStorage.removeItem('joti_auth_password');
       document.getElementById('password-input').value = '';
       if (document.getElementById('tracker-password-input')) {
         document.getElementById('tracker-password-input').value = '';
       }
+      applyAdminButtonState();
       initAuth();
     }
 
@@ -1320,8 +1354,12 @@
 
       if (user === 'jeroen' && pass === 'Deurloo!') {
         sessionStorage.setItem('joti_admin_auth', 'true');
+        sessionStorage.setItem('joti_authenticated', 'true');
+        sessionStorage.setItem('joti_auth_password', 'Deurloo!');
         document.getElementById('admin-modal').style.display = 'none';
+        document.getElementById('auth-modal').style.display = 'none';
         document.getElementById('admin-dashboard-modal').style.display = 'flex';
+        applyAdminButtonState();
       } else {
         document.getElementById('admin-modal').style.display = 'none';
         document.getElementById('wrong-password-modal').style.display = 'flex';
@@ -1388,6 +1426,8 @@
       if (localStorage.getItem('joti_no_bg') === 'true') {
         document.body.classList.add('no-bg');
       }
+
+      applyAdminButtonState();
     });
 
     initAuth();
@@ -1906,13 +1946,12 @@
         updatePhotoAssignments(),
         updateAreas()
       ]);
-      document.getElementById('last-update').innerText = new Date().toLocaleTimeString('nl-NL');
     }
 
     refreshDashboard();
     updateCountdown();
 
-    setInterval(refreshDashboard, 60000);
+    setInterval(refreshDashboard, 30000); // Aangepast naar 30 seconden
     setInterval(updateCountdown, 1000);
   </script>
 </body>
