@@ -1090,15 +1090,6 @@
           <option value="#a855f7">Paars</option>
         </select>
 
-        <div class="audio-control-label" style="margin-top: 0.75rem;">
-          <span>🌫️ Snel Vervaag Vakken</span>
-        </div>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <button class="btn-popup" style="flex: 1; justify-content: center;" onclick="toggleBlurElement('photos-card-panel')">📸 Foto's</button>
-          <button class="btn-popup" style="flex: 1; justify-content: center;" onclick="toggleBlurElement('hints-card-panel')">💡 Hints</button>
-          <button class="btn-popup" style="flex: 1; justify-content: center;" onclick="toggleBlurElement('countdown-card-panel')">⏳ Countdown</button>
-        </div>
-
         <button class="btn-popup" style="width: 100%; justify-content: center; margin-top: 0.5rem;" onclick="playAlarm(2)">
           🧪 Test Geluid
         </button>
@@ -1463,13 +1454,6 @@
 
     function closeSubscriptionsModal() {
       document.getElementById('subscriptions-modal').style.display = 'none';
-    }
-
-    function toggleBlurElement(elementId) {
-      const cardPanel = document.getElementById(elementId);
-      if (cardPanel) {
-        cardPanel.classList.toggle('blurred');
-      }
     }
 
     function toggleBackground() {
