@@ -507,6 +507,26 @@
       filter: blur(5px);
     }
 
+    /* Uitvergrote statussen voor panelen */
+    .column.maximized {
+      grid-column: span 2;
+      z-index: 50;
+    }
+
+    .column.maximized .card-panel {
+      height: 100% !important;
+      flex: 1 !important;
+    }
+
+    .card-panel.panel-maximized {
+      flex: 1 !important;
+      height: 100% !important;
+    }
+
+    .column.hidden-pane {
+      display: none !important;
+    }
+
     .full-height { flex: 1; }
     .split-top { flex: 1.2; }
     .split-bottom { flex: 1; }
@@ -1139,11 +1159,14 @@
 
   <div class="dashboard-container">
     <!-- LINKS: Berichten -->
-    <div class="column">
-      <div class="card-panel full-height" style="display: flex; flex-direction: column;">
+    <div class="column" id="column-articles">
+      <div class="card-panel full-height" id="panel-articles" style="display: flex; flex-direction: column;">
         <div class="column-header">
           <span>Alle Berichten</span>
-          <span class="badge" id="count-articles">0</span>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span class="badge" id="count-articles">0</span>
+            <button class="btn-popup" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="toggleExpandPane('panel-articles', this)">Vergroten</button>
+          </div>
         </div>
         <div class="column-content" id="container-articles" style="flex: 1;">
           <em>Laden...</em>
@@ -1159,25 +1182,29 @@
     </div>
 
     <!-- MIDDEN: Foto-opdrachten & Binnenkomende Hints -->
-    <div class="column">
-      <div class="card-panel split-top" id="photos-card-panel">
+    <div class="column" id="column-middle-group">
+      <div class="card-panel split-top" id="panel-photos">
         <div id="notification-container-photos" class="notification-overlay"></div>
 
         <div class="column-header">
           <span>Foto Opdrachten</span>
-          <span class="badge" id="count-photos">0</span>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span class="badge" id="count-photos">0</span>
+          </div>
         </div>
         <div class="column-content" id="container-photos">
           <em>Laden...</em>
         </div>
       </div>
 
-      <div class="card-panel split-bottom" id="hints-card-panel">
+      <div class="card-panel split-bottom" id="panel-hints">
         <div id="notification-container-hints" class="notification-overlay"></div>
 
         <div class="column-header">
           <span>Binnenkomende Hints</span>
-          <span class="badge" id="count-hints">0</span>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span class="badge" id="count-hints">0</span>
+          </div>
         </div>
         <div class="column-content" id="container-hints">
           <em>Laden...</em>
@@ -1185,8 +1212,8 @@
       </div>
     </div>
 
-    <!-- RECHTS: Vossenteams & Timer -->
-    <div class="column">
+    <!-- RECHTS: Vossenteams & Timer (Blijft altijd zichtbaar) -->
+    <div class="column" id="column-right-fixed">
       <div class="card-panel compact-teams">
         <div id="notification-container-areas" class="notification-overlay"></div>
 
@@ -1237,6 +1264,42 @@
   </div>
 
   <script>
+    let currentExpandedPanelId = null;
+
+    function toggleExpandPane(panelId, btnEl) {
+      const colArticles = document.getElementById('column-articles');
+      const colMiddle = document.getElementById('column-middle-group');
+      const panelArticles = document.getElementById('panel-articles');
+
+      if (currentExpandedPanelId === panelId) {
+        // Al vergroot, dus alles herstellen naar normaal
+        colArticles.classList.remove('hidden-pane', 'maximized');
+        colMiddle.classList.remove('hidden-pane');
+        panelArticles.classList.remove('panel-maximized');
+
+        btnEl.innerText = 'Vergroten';
+        currentExpandedPanelId = null;
+      } else {
+        // Reset alle voorgaande vergrotingen
+        colArticles.classList.remove('maximized', 'hidden-pane');
+        colMiddle.classList.remove('hidden-pane');
+        panelArticles.classList.remove('panel-maximized');
+
+        document.querySelectorAll('.dashboard-container .column .column-header button').forEach(b => {
+          if (b.innerText === 'Verkleinen') b.innerText = 'Vergroten';
+        });
+
+        if (panelId === 'panel-articles') {
+          colMiddle.classList.add('hidden-pane');
+          colArticles.classList.add('maximized');
+          panelArticles.classList.add('panel-maximized');
+        }
+
+        btnEl.innerText = 'Verkleinen';
+        currentExpandedPanelId = panelId;
+      }
+    }
+
     function applyAdminButtonState() {
       const adminBtn = document.getElementById('admin-header-btn');
       const activePassword = sessionStorage.getItem('joti_auth_password');
@@ -1951,7 +2014,7 @@
     refreshDashboard();
     updateCountdown();
 
-    setInterval(refreshDashboard, 30000); // Aangepast naar 30 seconden
+    setInterval(refreshDashboard, 30000);
     setInterval(updateCountdown, 1000);
   </script>
 </body>
