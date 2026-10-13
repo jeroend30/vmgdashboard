@@ -19,7 +19,7 @@
       --alarm-amber-glow: rgba(245, 158, 11, 0.6);
       --charlie-accent: #f59e0b;
       --charlie-glow: rgba(245, 158, 11, 0.35);
-      --panel-title-size: 0.95rem; /* Standaard maximale begrensde grootte */
+      --panel-title-size: 0.95rem;
     }
 
     * {
@@ -1231,6 +1231,23 @@
     </div>
   </div>
 
+  <!-- Modal: Bericht Details / Beschrijving -->
+  <div id="article-detail-modal" class="menu-modal-overlay" onclick="closeArticleDetailModal(event)">
+    <div class="menu-modal-box all-vossen-modal-box" onclick="event.stopPropagation()">
+      <div class="menu-modal-header">
+        <div class="menu-modal-title" id="article-modal-title">📄 Bericht</div>
+        <button class="menu-modal-close" onclick="closeArticleDetailModal()">✕</button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 0.8rem; padding: 0.5rem 0; max-height: 60vh; overflow-y: auto;">
+        <div id="article-modal-meta" style="font-size: 0.8rem; color: var(--text-muted);"></div>
+        <div id="article-modal-body" style="font-size: 0.95rem; line-height: 1.5; color: #f8fafc; white-space: pre-wrap; word-break: break-word;"></div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; margin-top: 0.75rem;">
+        <a id="article-modal-link" href="#" target="_blank" class="btn-popup" style="text-decoration: none;">Bekijk op Jotihunt.nl ↗</a>
+      </div>
+    </div>
+  </div>
+
   <header>
     <div class="header-left">
       <h1>Verbraak Margriet groep</h1>
@@ -1372,7 +1389,6 @@
       const panelArticles = document.getElementById('panel-articles');
 
       if (currentExpandedPanelId === panelId) {
-        // Al vergroot, dus alles herstellen naar normaal
         colArticles.classList.remove('hidden-pane', 'maximized');
         colMiddle.classList.remove('hidden-pane');
         panelArticles.classList.remove('panel-maximized');
@@ -1380,7 +1396,6 @@
         btnEl.innerText = 'Vergroten';
         currentExpandedPanelId = null;
       } else {
-        // Reset alle voorgaande vergrotingen
         colArticles.classList.remove('maximized', 'hidden-pane');
         colMiddle.classList.remove('hidden-pane');
         panelArticles.classList.remove('panel-maximized');
@@ -1584,6 +1599,31 @@
 
     function closeSubscriptionsModal() {
       document.getElementById('subscriptions-modal').style.display = 'none';
+    }
+
+    function openArticleDetailModal(item) {
+      const modal = document.getElementById('article-detail-modal');
+      const titleEl = document.getElementById('article-modal-title');
+      const metaEl = document.getElementById('article-modal-meta');
+      const bodyEl = document.getElementById('article-modal-body');
+      const linkEl = document.getElementById('article-modal-link');
+
+      if (!modal) return;
+
+      titleEl.innerHTML = `📄 ${item.title || 'Bericht'}`;
+      metaEl.innerText = `Geplaatst op: ${formatDateTimeFull(item.publish_at || item.created_at)} | Type: ${item.type || 'Bericht'}`;
+      bodyEl.innerText = item.description || item.content || 'Geen beschrijving beschikbaar.';
+      
+      const articleUrl = item.id ? `https://jotihunt.nl/articles/${item.id}` : 'https://jotihunt.nl';
+      linkEl.href = articleUrl;
+
+      modal.style.display = 'flex';
+    }
+
+    function closeArticleDetailModal(e) {
+      if (!e || e.target.id === 'article-detail-modal') {
+        document.getElementById('article-detail-modal').style.display = 'none';
+      }
     }
 
     function toggleBackground() {
@@ -1856,15 +1896,13 @@
         const typeStr = item.type || 'Bericht';
         const badgeClass = getTypeBadgeClass(typeStr);
         const remainingInfo = getRemainingTimeText(item.end_at || item.endAt || item.until);
-        const articleUrl = item.id ? `https://jotihunt.nl/articles/${item.id}` : 'https://jotihunt.nl';
-
         const isLatest = (index === 0);
         const itemDateStr = item.publish_at || item.created_at;
 
         const card = document.createElement('div');
         card.className = `item-card ${isLatest ? 'latest-article' : ''}`;
         card.addEventListener('click', () => {
-          window.open(articleUrl, '_blank');
+          openArticleDetailModal(item);
         });
         
         card.innerHTML = `
@@ -1916,9 +1954,11 @@
         hintsContainer.innerHTML = '<em style="color: var(--text-muted); font-size: 0.85rem;">Nog geen hints beschikbaar.</em>';
       } else {
         hints.forEach(item => {
-          const hintUrl = item.id ? `https://jotihunt.nl/articles/${item.id}` : 'https://jotihunt.nl';
           const card = document.createElement('div');
           card.className = 'item-card';
+          card.addEventListener('click', () => {
+            openArticleDetailModal(item);
+          });
           card.innerHTML = `
             <div class="item-header">
               <span class="item-title">${item.title || 'Hint'}</span>
@@ -1927,9 +1967,9 @@
             <div class="item-meta">
               <span>Ontvangen: ${formatDate(item.publish_at || item.created_at)}</span>
             </div>
-            <a href="${hintUrl}" target="_blank" class="btn-link" style="color: #38bdf8; font-size: 0.8rem; text-decoration: none; margin-top: 0.2rem;">
-              Bekijk op Jotihunt.nl ↗
-            </a>
+            <div style="color: #38bdf8; font-size: 0.8rem; margin-top: 0.2rem;">
+              Klik om beschrijving te lezen ↗
+            </div>
           `;
           hintsContainer.appendChild(card);
         });
