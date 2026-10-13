@@ -351,7 +351,7 @@
     }
 
     header {
-      background: rgba(15, 23, 42, 0.75);
+      background: var(--header-bg, rgba(15, 23, 42, 0.75));
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       padding: 0.75rem 1.5rem;
@@ -360,6 +360,7 @@
       justify-content: space-between;
       align-items: center;
       position: relative;
+      transition: background 0.3s ease;
     }
 
     .header-left h1 {
@@ -797,6 +798,18 @@
     .status-default { 
       background-color: #64748b; 
       color: #fff; 
+    }
+
+    /* Stijl voor gekoppelde scoutinggroepen bij vossenteams */
+    .scouting-groups-tag {
+      font-size: 0.75rem;
+      color: #f8fafc;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      margin-top: 0.2rem;
+      display: inline-block;
     }
 
     /* Versterkte en schitterende Countdown / Timer Styling */
@@ -1384,11 +1397,18 @@
       if (!adminBtn) return;
 
       if (activePassword === 'rsa257') {
-        adminBtn.style.opacity = '0.5';
-        adminBtn.style.pointerEvents = 'none';
+        adminBtn.style.display = 'none';
       } else {
-        adminBtn.style.opacity = '1';
-        adminBtn.style.pointerEvents = 'auto';
+        adminBtn.style.display = 'flex';
+      }
+    }
+
+    function applyHeaderBackground() {
+      const activePassword = sessionStorage.getItem('joti_auth_password');
+      if (activePassword === 'Deurloo!') {
+        document.documentElement.style.setProperty('--header-bg', 'rgba(56, 189, 248, 0.25)');
+      } else {
+        document.documentElement.style.setProperty('--header-bg', 'rgba(15, 23, 42, 0.75)');
       }
     }
 
@@ -1403,6 +1423,7 @@
       if (sessionStorage.getItem('joti_authenticated') === 'true') {
         modal.style.display = 'none';
         applyAdminButtonState();
+        applyHeaderBackground();
         return;
       }
 
@@ -1421,7 +1442,16 @@
         sessionStorage.setItem('joti_auth_password', passVal);
         document.getElementById('auth-modal').style.display = 'none';
         if (errorEl) errorEl.style.display = 'none';
+
+        if (passVal === 'Deurloo!') {
+          sessionStorage.setItem('joti_admin_auth', 'true');
+          updateMenuTitleColor('#38bdf8');
+          const colorSelect = document.getElementById('menu-title-color-select');
+          if (colorSelect) colorSelect.value = '#38bdf8';
+        }
+
         applyAdminButtonState();
+        applyHeaderBackground();
       } else {
         if (errorEl) {
           errorEl.style.display = 'block';
@@ -1450,17 +1480,20 @@
     function logout() {
       sessionStorage.removeItem('joti_authenticated');
       sessionStorage.removeItem('joti_auth_password');
+      sessionStorage.removeItem('joti_admin_auth');
       document.getElementById('password-input').value = '';
       if (document.getElementById('tracker-password-input')) {
         document.getElementById('tracker-password-input').value = '';
       }
       applyAdminButtonState();
+      applyHeaderBackground();
       initAuth();
     }
 
     /* Admin Login Functies */
     function handleAdminHeaderClick() {
-      if (sessionStorage.getItem('joti_admin_auth') === 'true') {
+      const activePassword = sessionStorage.getItem('joti_auth_password');
+      if (activePassword === 'Deurloo!' || sessionStorage.getItem('joti_admin_auth') === 'true') {
         document.getElementById('admin-dashboard-modal').style.display = 'flex';
       } else {
         document.getElementById('admin-modal').style.display = 'flex';
@@ -1499,7 +1532,13 @@
         document.getElementById('admin-modal').style.display = 'none';
         document.getElementById('auth-modal').style.display = 'none';
         document.getElementById('admin-dashboard-modal').style.display = 'flex';
+        
+        updateMenuTitleColor('#38bdf8');
+        const colorSelect = document.getElementById('menu-title-color-select');
+        if (colorSelect) colorSelect.value = '#38bdf8';
+
         applyAdminButtonState();
+        applyHeaderBackground();
       } else {
         document.getElementById('admin-modal').style.display = 'none';
         document.getElementById('wrong-password-modal').style.display = 'flex';
@@ -1561,6 +1600,7 @@
       }
 
       applyAdminButtonState();
+      applyHeaderBackground();
     });
 
     initAuth();
@@ -1950,6 +1990,14 @@
         const statusClass = `status-${statusLower}`;
         const bgStatusClass = `bg-status-${statusLower}`;
         const isCharlie = teamName === 'CHARLIE';
+        
+        const groupsData = item.groups || item.scoutinggroups || item.info || item.members || [];
+        let groupsText = '';
+        if (Array.isArray(groupsData) && groupsData.length > 0) {
+          groupsText = groupsData.map(g => typeof g === 'string' ? g : (g.name || g.title || '')).filter(Boolean).join(', ');
+        } else if (typeof groupsData === 'string' && groupsData.trim() !== '') {
+          groupsText = groupsData;
+        }
 
         if (!isFirstLoad && areaStatuses[teamName] && areaStatuses[teamName] !== currentStatus) {
           showOverlayNotification(
@@ -1973,6 +2021,7 @@
             </span>
             <span class="status-pill ${statusClass}">${currentStatus}</span>
           </div>
+          ${groupsText ? `<div class="scouting-groups-tag">📍 Groepen: ${groupsText}</div>` : ''}
           <div class="item-meta" style="margin-top: 0.2rem;">
             <span>Laatst gezien: ${formatDate(item.updated_at || item.updatedAt)}</span>
           </div>
@@ -2012,6 +2061,14 @@
         const bgStatusClass = `bg-status-${statusLower}`;
         const isCharlie = teamName === 'CHARLIE';
 
+        const groupsData = item.groups || item.scoutinggroups || item.info || item.members || [];
+        let groupsText = '';
+        if (Array.isArray(groupsData) && groupsData.length > 0) {
+          groupsText = groupsData.map(g => typeof g === 'string' ? g : (g.name || g.title || '')).filter(Boolean).join(', ');
+        } else if (typeof groupsData === 'string' && groupsData.trim() !== '') {
+          groupsText = groupsData;
+        }
+
         const card = document.createElement('div');
         card.className = `item-card ${bgStatusClass} ${isCharlie ? 'charlie-highlight' : ''}`;
         
@@ -2023,6 +2080,7 @@
             </span>
             <span class="status-pill ${statusClass}">${currentStatus}</span>
           </div>
+          ${groupsText ? `<div class="scouting-groups-tag">📍 Groepen: ${groupsText}</div>` : ''}
           <div class="item-meta" style="margin-top: 0.25rem;">
             <span>Laatste update: ${formatDate(item.updated_at || item.updatedAt)}</span>
           </div>
