@@ -44,6 +44,46 @@
       background: #000000 !important;
     }
 
+    /* Mobiel Blokkeer Scherm (Alleen zichtbaar op schermen < 900px) */
+    #mobile-blocker {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.98)),
+                  url('https://images5.alphacoders.com/118/thumb-1920-1188770.jpg') center/cover no-repeat fixed;
+      z-index: 99999;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+    }
+
+    .mobile-alarm-box {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(25, 10, 15, 0.96);
+      border: 3px solid var(--alarm-red);
+      border-radius: 16px;
+      padding: 2rem 1.5rem;
+      color: #fff;
+      box-shadow: 0 0 40px var(--alarm-red-glow);
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      animation: alarmPulse 0.8s infinite alternate ease-in-out;
+    }
+
+    @media (max-width: 900px) {
+      #mobile-blocker {
+        display: flex !important;
+      }
+    }
+
     /* Inlog / Registratie Scherm */
     .auth-overlay {
       position: fixed;
@@ -951,6 +991,16 @@
   </style>
 </head>
 <body>
+
+  <!-- Mobiel Blokkeer Scherm -->
+  <div id="mobile-blocker">
+    <div class="mobile-alarm-box">
+      <div class="alarm-icon-container">🚨</div>
+      <div class="alarm-tag">⚠️ TOEGANG GEWEIGERD ⚠️</div>
+      <div class="toast-title">Mobiel Apparaat Gedetecteerd</div>
+      <div class="toast-body" style="margin-top: 0.5rem;">helaas, alleen op computer en tablet te bekijken</div>
+    </div>
+  </div>
 
   <!-- Inlog / Registratie Scherm -->
   <div id="auth-modal" class="auth-overlay">
