@@ -105,7 +105,7 @@
     }
 
     .auth-main-logo {
-      max-height: 240px;
+      max-height: 120px;
       width: auto;
       object-fit: contain;
       margin-bottom: 2rem;
@@ -412,7 +412,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0.35rem;
+      gap: 0.5rem;
       font-size: 0.725rem;
       color: #38bdf8;
       font-weight: 600;
@@ -746,6 +746,23 @@
     .type-nieuws { background-color: #10b981; color: #fff; }
     .type-default { background-color: #64748b; color: #fff; }
 
+    /* Volledige Vlak Status Stijlen voor Vossenteams */
+    .item-card.bg-status-rood, .item-card.bg-status-red { 
+      background-color: rgba(239, 68, 68, 0.85) !important; 
+      border-color: #fca5a5 !important;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+    }
+    .item-card.bg-status-oranje, .item-card.bg-status-orange { 
+      background-color: rgba(249, 115, 22, 0.85) !important; 
+      border-color: #fed7aa !important;
+      box-shadow: 0 0 15px rgba(249, 115, 22, 0.6);
+    }
+    .item-card.bg-status-groen, .item-card.bg-status-green { 
+      background-color: rgba(34, 197, 94, 0.85) !important; 
+      border-color: #86efac !important;
+      box-shadow: 0 0 15px rgba(34, 197, 94, 0.6);
+    }
+
     .status-pill {
       display: inline-block;
       padding: 0.35rem 0.85rem;
@@ -777,16 +794,31 @@
       color: #fff; 
     }
 
+    /* Versterkte en schitterende Countdown / Timer Styling */
     .timer-container {
       flex: 1;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 1.25rem 1rem;
+      padding: 1.5rem 1rem;
       text-align: center;
-      background: radial-gradient(circle at center, rgba(56, 189, 248, 0.05) 0%, transparent 70%);
+      background: 
+        radial-gradient(circle at center, rgba(56, 189, 248, 0.12) 0%, rgba(30, 41, 59, 0.4) 70%),
+        linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.85));
       position: relative;
+      border-radius: 0 0 12px 12px;
+      overflow: hidden;
+    }
+
+    .timer-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
     }
 
     .credits-tag-corner {
@@ -802,77 +834,79 @@
     .countdown-title-wrapper {
       display: flex;
       flex-direction: column;
-      gap: 0.2rem;
-      margin-bottom: 0.5rem;
+      gap: 0.25rem;
+      margin-bottom: 0.85rem;
     }
 
     .countdown-main-label {
-      font-size: 0.78rem;
-      font-weight: 700;
+      font-size: 0.82rem;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 1.2px;
       color: var(--accent);
+      text-shadow: 0 0 10px var(--accent-glow);
     }
 
     .countdown-sub-label {
-      font-size: 0.82rem;
-      color: var(--text-muted);
+      font-size: 0.85rem;
+      color: #f1f5f9;
+      font-weight: 500;
     }
 
     .timer-display {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.6rem;
-      margin: 0.75rem 0 1rem 0;
+      gap: 0.75rem;
+      margin: 0.5rem 0 1rem 0;
     }
 
     .time-block {
-      background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.9));
-      border: 1px solid rgba(56, 189, 248, 0.35);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.1);
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.98));
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), inset 0 1px 3px rgba(255, 255, 255, 0.15);
       border-radius: 12px;
-      padding: 0.7rem 0.9rem;
-      min-width: 68px;
+      padding: 0.75rem 1rem;
+      min-width: 72px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      transition: transform 0.2s ease;
+      transition: all 0.25s ease;
     }
 
     .time-block:hover {
       border-color: var(--accent);
-      box-shadow: 0 0 18px var(--accent-glow), inset 0 1px 2px rgba(255, 255, 255, 0.15);
-      transform: translateY(-2px);
+      box-shadow: 0 0 20px var(--accent-glow), inset 0 1px 3px rgba(255, 255, 255, 0.25);
+      transform: translateY(-3px);
     }
 
     .time-value {
-      font-size: 1.65rem;
-      font-weight: 800;
+      font-size: 1.75rem;
+      font-weight: 900;
       color: #fff;
       font-family: monospace;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      text-shadow: 0 2px 6px rgba(0,0,0,0.4);
     }
 
     .time-label {
-      font-size: 0.6rem;
+      font-size: 0.62rem;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.8px;
       color: var(--text-muted);
-      margin-top: 0.2rem;
-      font-weight: 600;
+      margin-top: 0.25rem;
+      font-weight: 700;
     }
 
     .time-separator {
-      font-size: 1.5rem;
-      font-weight: 800;
+      font-size: 1.6rem;
+      font-weight: 900;
       color: var(--accent);
-      text-shadow: 0 0 10px var(--accent-glow);
+      text-shadow: 0 0 12px var(--accent-glow);
       animation: pulseSeparator 2s infinite ease-in-out;
     }
 
     @keyframes pulseSeparator {
-      0%, 100% { opacity: 0.6; }
+      0%, 100% { opacity: 0.5; }
       50% { opacity: 1; }
     }
 
@@ -1004,7 +1038,7 @@
 
   <!-- Inlog / Registratie Scherm -->
   <div id="auth-modal" class="auth-overlay">
-    <img src="https://images.squarespace-cdn.com/content/v1/51cdafc4e4b09eb676a64e68/1455062782638-O5OZ6Q2LKGVS7EVFENUH/image-asset.png" alt="Scouting Logo" class="auth-main-logo">
+    <img src="https://verbraakmargrietgroep.nl/wp-content/uploads/2020/12/Logo_Vrijstaand.png" alt="Scouting Logo" class="auth-main-logo">
     <div class="auth-container">
       <!-- Links: Inlog Dashboard -->
       <div class="auth-box">
@@ -1217,12 +1251,13 @@
         <div class="column-content" id="container-articles" style="flex: 1;">
           <em>Laden...</em>
         </div>
-        <div style="padding: 0.75rem; border-top: 1px solid var(--card-border); background: rgba(15, 23, 42, 0.4);">
-          <div class="status-bar-box" style="align-items: center;">
+        <div style="padding: 0.75rem; border-top: 1px solid var(--card-border); background: rgba(15, 23, 42, 0.4); display: flex; justify-content: space-between; align-items: center;">
+          <div class="status-bar-box" style="align-items: center; flex: 1; margin-right: 0.5rem;">
             <div class="auto-refresh-tag">
               <span class="live-pulse"></span> Auto refresh: 30s
             </div>
           </div>
+          <img src="https://verbraakmargrietgroep.nl/wp-content/uploads/2020/12/Logo_Vrijstaand.png" alt="Mini Logo" style="height: 32px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
         </div>
       </div>
     </div>
@@ -1692,6 +1727,17 @@
       return d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
     }
 
+    function formatDateTimeFull(dateString) {
+      if (!dateString) return 'Onbekend';
+      const d = new Date(dateString);
+      return d.toLocaleString('nl-NL', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    }
+
     function getRemainingTimeText(endDateString) {
       if (!endDateString) return null;
       const now = new Date();
@@ -1755,6 +1801,7 @@
         const articleUrl = item.id ? `https://jotihunt.nl/articles/${item.id}` : 'https://jotihunt.nl';
 
         const isLatest = (index === 0);
+        const itemDateStr = item.publish_at || item.created_at;
 
         const card = document.createElement('div');
         card.className = `item-card ${isLatest ? 'latest-article' : ''}`;
@@ -1771,7 +1818,7 @@
             </div>
           </div>
           <div class="item-meta">
-            <span>Gepubliceerd: ${formatDate(item.publish_at || item.created_at)}</span>
+            <span>Geplaatst: ${formatDateTimeFull(itemDateStr)}</span>
           </div>
           ${remainingInfo ? `
             <div class="card-footer-right">
@@ -1903,7 +1950,9 @@
       filteredTeams.forEach(item => {
         const teamName = (item.name || item.area || 'Onbekend').toUpperCase();
         const currentStatus = item.status || 'Onbekend';
-        const statusClass = `status-${currentStatus.toLowerCase()}`;
+        const statusLower = currentStatus.toLowerCase();
+        const statusClass = `status-${statusLower}`;
+        const bgStatusClass = `bg-status-${statusLower}`;
         const isCharlie = teamName === 'CHARLIE';
 
         if (!isFirstLoad && areaStatuses[teamName] && areaStatuses[teamName] !== currentStatus) {
@@ -1918,7 +1967,7 @@
         areaStatuses[teamName] = currentStatus;
 
         const card = document.createElement('div');
-        card.className = `item-card ${isCharlie ? 'charlie-highlight' : ''}`;
+        card.className = `item-card ${bgStatusClass} ${isCharlie ? 'charlie-highlight' : ''}`;
         
         card.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -1962,11 +2011,13 @@
       sortedAreas.forEach(item => {
         const teamName = (item.name || item.area || 'Onbekend').toUpperCase();
         const currentStatus = item.status || 'Onbekend';
-        const statusClass = `status-${currentStatus.toLowerCase()}`;
+        const statusLower = currentStatus.toLowerCase();
+        const statusClass = `status-${statusLower}`;
+        const bgStatusClass = `bg-status-${statusLower}`;
         const isCharlie = teamName === 'CHARLIE';
 
         const card = document.createElement('div');
-        card.className = `item-card ${isCharlie ? 'charlie-highlight' : ''}`;
+        card.className = `item-card ${bgStatusClass} ${isCharlie ? 'charlie-highlight' : ''}`;
         
         card.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: center;">
