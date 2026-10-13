@@ -19,6 +19,7 @@
       --alarm-amber-glow: rgba(245, 158, 11, 0.6);
       --charlie-accent: #f59e0b;
       --charlie-glow: rgba(245, 158, 11, 0.35);
+      --panel-title-size: 0.95rem; /* Standaard maximale begrensde grootte */
     }
 
     * {
@@ -583,7 +584,7 @@
       background: rgba(255, 255, 255, 0.05);
       border-bottom: 1px solid var(--card-border);
       font-weight: 600;
-      font-size: 0.95rem;
+      font-size: var(--panel-title-size);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -1183,6 +1184,15 @@
           <option value="#a855f7">Paars</option>
         </select>
 
+        <div class="audio-control-label" style="margin-top: 0.75rem;">
+          <span>🔤 Titel Lettergrootte (Max Begrensd)</span>
+        </div>
+        <select id="panel-title-size-select" class="sound-select" onchange="updatePanelTitleSize(this.value)">
+          <option value="0.85rem">Klein</option>
+          <option value="0.95rem" selected>Normaal</option>
+          <option value="1.05rem">Groot (Max)</option>
+        </select>
+
         <button class="btn-popup" style="width: 100%; justify-content: center; margin-top: 0.5rem;" onclick="playAlarm(2)">
           🧪 Test Geluid
         </button>
@@ -1587,12 +1597,24 @@
       localStorage.setItem('joti_menu_title_color', colorHex);
     }
 
+    function updatePanelTitleSize(sizeVal) {
+      document.documentElement.style.setProperty('--panel-title-size', sizeVal);
+      localStorage.setItem('joti_panel_title_size', sizeVal);
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       const savedColor = localStorage.getItem('joti_menu_title_color');
       if (savedColor) {
         document.documentElement.style.setProperty('--menu-title-color', savedColor);
         const colorSelect = document.getElementById('menu-title-color-select');
         if (colorSelect) colorSelect.value = savedColor;
+      }
+
+      const savedSize = localStorage.getItem('joti_panel_title_size');
+      if (savedSize) {
+        document.documentElement.style.setProperty('--panel-title-size', savedSize);
+        const sizeSelect = document.getElementById('panel-title-size-select');
+        if (sizeSelect) sizeSelect.value = savedSize;
       }
 
       if (localStorage.getItem('joti_no_bg') === 'true') {
