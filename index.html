@@ -1304,7 +1304,7 @@
         <div id="notification-container-photos" class="notification-overlay"></div>
 
         <div class="column-header">
-          <span>Foto Opdrachten</span>
+          <span>Foto & Overige Opdrachten</span>
           <div style="display: flex; gap: 0.5rem; align-items: center;">
             <span class="badge" id="count-photos">0</span>
           </div>
@@ -1729,7 +1729,7 @@
       showOverlayNotification(
         'notification-container-photos',
         'Nieuwe Opdracht!',
-        'Er is een nieuwe <strong>Foto-opdracht</strong> gepubliceerd!'
+        'Er is een nieuwe <strong>Opdracht</strong> gepubliceerd!'
       );
       playAlarm(1);
     }
@@ -1977,47 +1977,87 @@
     }
 
     async function updatePhotoAssignments() {
-      const data = await fetchData('photoAssignments');
+      const [photoAssignmentsData, articlesData] = await Promise.all([
+        fetchData('photoAssignments'),
+        fetchData('articles')
+      ]);
       const container = document.getElementById('container-photos');
-      if (!data) return;
+      if (!container) return;
 
-      document.getElementById('count-photos').innerText = data.length;
+      // Filter ook assignments/opdrachten uit de algemene berichten
+      const messageAssignments = (articlesData || []).filter(item => {
+        const t = (item.type || '').toLowerCase();
+        return t.includes('opdracht') || t.includes('assignment');
+      });
+
+      // Combineer beide lijsten (zorg voor unieke items op basis van id of titel)
+      const combinedMap = new Map();
+      
+      if (Array.isArray(photoAssignmentsData)) {
+        photoAssignmentsData.forEach(item => {
+          const key = item.id || item.title;
+          combinedMap.set(key, { ...item, _sourceType: 'photo' });
+        });
+      }
+
+      if (Array.isArray(messageAssignments)) {
+        messageAssignments.forEach(item => {
+          const key = item.id || item.title;
+          if (!combinedMap.has(key)) {
+            combinedMap.set(key, { ...item, _sourceType: 'message' });
+          }
+        });
+      }
+
+      const allCombinedAssignments = Array.from(combinedMap.values());
+      document.getElementById('count-photos').innerText = allCombinedAssignments.length;
       container.innerHTML = '';
 
       let hasNewPhoto = false;
       const currentPhotoIds = new Set();
 
-      data.forEach(item => {
+      allCombinedAssignments.forEach(item => {
         const id = item.id || item.title;
         currentPhotoIds.add(id);
         if (!isFirstLoad && !knownPhotoIds.has(id)) {
           hasNewPhoto = true;
           showOverlayNotification(
             'notification-container-photos',
-            'Nieuwe Foto-Opdracht!',
-            `<strong>${item.title || 'Foto-opdracht'}</strong> is zojuist online gezet!`
+            'Nieuwe Opdracht!',
+            `<strong>${item.title || 'Opdracht'}</strong> is zojuist toegevoegd!`
           );
         }
       });
 
       knownPhotoIds = currentPhotoIds;
 
-      if (data.length === 0) {
-        container.innerHTML = '<em style="color: var(--text-muted); font-size: 0.85rem;">Geen foto-opdrachten.</em>';
+      if (allCombinedAssignments.length === 0) {
+        container.innerHTML = '<em style="color: var(--text-muted); font-size: 0.85rem;">Geen foto- of overige opdrachten.</em>';
         return;
       }
 
-      data.forEach(item => {
-        const remainingInfo = getRemainingTimeText(item.end_at);
+      allCombinedAssignments.forEach(item => {
+        const remainingInfo = getRemainingTimeText(item.end_at || item.endAt || item.until);
         const card = document.createElement('div');
         card.className = 'item-card';
+
+        // Als het een bericht-assignment is, maak hem ook aanklikbaar om details te tonen
+        if (item._sourceType === 'message') {
+          card.addEventListener('click', () => {
+            openArticleDetailModal(item);
+          });
+        }
+
         card.innerHTML = `
-          <div class="item-title">${item.title || 'Foto-opdracht'}</div>
-          <div class="item-meta">
-            <span>Punten: ${item.points || 'N/B'}</span>
-            <span>Eindigt: ${formatDate(item.end_at)}</span>
+          <div class="item-header">
+            <div class="item-title">${item.title || 'Opdracht'}</div>
+            <span class="type-badge type-opdracht">${item.type || 'OPDRACHT'}</span>
           </div>
-          <div class="item-body">${item.description || ''}</div>
+          <div class="item-meta">
+            <span>${item.points ? 'Punten: ' + item.points : 'Geplaatst: ' + formatDate(item.publish_at || item.created_at)}</span>
+            <span>${item.end_at ? 'Eindigt: ' + formatDate(item.end_at) : ''}</span>
+          </div>
+          <div class="item-body">${item.description || item.content || ''}</div>
           <div class="card-footer-right">
             ${remainingInfo ? `
               <span class="time-remaining-badge ${remainingInfo.isUrgent ? 'urgent' : ''}">
