@@ -1197,6 +1197,40 @@
     </div>
   </div>
 
+  <!-- Modal: Timer (Einde Jotihunt Countdown) -->
+  <div id="timer-modal" class="menu-modal-overlay" onclick="closeTimerModal(event)">
+    <div class="menu-modal-box" style="max-width: 440px; padding: 0; overflow: hidden;" onclick="event.stopPropagation()">
+      <div class="menu-modal-header" style="padding: 1rem 1.25rem;">
+        <div class="menu-modal-title">⏳ Einde Jotihunt Countdown</div>
+        <button class="menu-modal-close" onclick="closeTimerModal()">✕</button>
+      </div>
+      <div class="timer-container" style="border-radius: 0;">
+        <div class="countdown-title-wrapper">
+          <span class="countdown-main-label">⏳ Tijd tot einde hunt</span>
+          <span class="countdown-sub-label">18 oktober om 12:00 uur</span>
+        </div>
+
+        <div class="timer-display">
+          <div class="time-block">
+            <span class="time-value" id="timer-hours-modal">00</span>
+            <span class="time-label">Uren</span>
+          </div>
+          <span class="time-separator">:</span>
+          <div class="time-block">
+            <span class="time-value" id="timer-minutes-modal">00</span>
+            <span class="time-label">Min</span>
+          </div>
+          <span class="time-separator">:</span>
+          <div class="time-block">
+            <span class="time-value" id="timer-seconds-modal">00</span>
+            <span class="time-label">Sec</span>
+          </div>
+        </div>
+        <div class="credits-tag-corner">Gemaakt door Jeroen</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: Alle Vossenteams -->
   <div id="all-vossen-modal" class="menu-modal-overlay" onclick="closeAllVossenModal(event)">
     <div class="menu-modal-box all-vossen-modal-box" onclick="event.stopPropagation()">
@@ -1257,6 +1291,9 @@
     <div class="header-right">
       <button class="btn-popup" onclick="openSubscriptionsModal()">
         👥 Deelnemers
+      </button>
+      <button class="btn-popup" onclick="openTimerModal()">
+        ⏳ Timer
       </button>
       <button id="admin-header-btn" class="btn-popup" style="background: rgba(56, 189, 248, 0.3);" onclick="handleAdminHeaderClick()">
         🔐 Admin
@@ -1326,7 +1363,7 @@
       </div>
     </div>
 
-    <!-- RECHTS: Vossenteams & Timer (Blijft altijd zichtbaar) -->
+    <!-- RECHTS: Vossenteams & Kaart (Alle deelnemers) -->
     <div class="column" id="column-right-fixed">
       <div class="card-panel compact-teams">
         <div id="notification-container-areas" class="notification-overlay"></div>
@@ -1345,33 +1382,12 @@
         </div>
       </div>
 
-      <div class="card-panel full-height" id="countdown-card-panel">
+      <div class="card-panel full-height" id="all-participants-card-panel">
         <div class="column-header">
-          <span>Einde Jotihunt Countdown</span>
+          <span>alle deelnemers</span>
         </div>
-        <div class="timer-container">
-          <div class="countdown-title-wrapper">
-            <span class="countdown-main-label">⏳ Tijd tot einde hunt</span>
-            <span class="countdown-sub-label">18 oktober om 12:00 uur</span>
-          </div>
-
-          <div class="timer-display">
-            <div class="time-block">
-              <span class="time-value" id="timer-hours">00</span>
-              <span class="time-label">Uren</span>
-            </div>
-            <span class="time-separator">:</span>
-            <div class="time-block">
-              <span class="time-value" id="timer-minutes">00</span>
-              <span class="time-label">Min</span>
-            </div>
-            <span class="time-separator">:</span>
-            <div class="time-block">
-              <span class="time-value" id="timer-seconds">00</span>
-              <span class="time-label">Sec</span>
-            </div>
-          </div>
-          <div class="credits-tag-corner">Gemaakt door Jeroen</div>
+        <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden; background: rgba(15, 23, 42, 0.6);">
+          <iframe src="https://www.google.com/maps/d/embed?mid=1EaxMNS3cAKvZRuIKI6lF95YR0PUqmT4&ehbc=2E312F&noprof=1" width="100%" height="100%" style="border:0; flex: 1;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
       </div>
     </div>
@@ -1578,6 +1594,16 @@
 
     function closeMenuModal() {
       document.getElementById('menu-modal').style.display = 'none';
+    }
+
+    function openTimerModal() {
+      document.getElementById('timer-modal').style.display = 'flex';
+    }
+
+    function closeTimerModal(e) {
+      if (!e || e.target.id === 'timer-modal') {
+        document.getElementById('timer-modal').style.display = 'none';
+      }
     }
 
     function openAllVossenModal() {
@@ -2231,9 +2257,18 @@
       const diff = targetDate - now;
 
       if (diff <= 0) {
-        document.getElementById('timer-hours').innerText = '00';
-        document.getElementById('timer-minutes').innerText = '00';
-        document.getElementById('timer-seconds').innerText = '00';
+        ['timer-hours', 'timer-hours-modal'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.innerText = '00';
+        });
+        ['timer-minutes', 'timer-minutes-modal'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.innerText = '00';
+        });
+        ['timer-seconds', 'timer-seconds-modal'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.innerText = '00';
+        });
         return;
       }
 
@@ -2241,9 +2276,22 @@
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-      document.getElementById('timer-hours').innerText = String(totalHours).padStart(2, '0');
-      document.getElementById('timer-minutes').innerText = String(minutes).padStart(2, '0');
-      document.getElementById('timer-seconds').innerText = String(seconds).padStart(2, '0');
+      const hStr = String(totalHours).padStart(2, '0');
+      const mStr = String(minutes).padStart(2, '0');
+      const sStr = String(seconds).padStart(2, '0');
+
+      ['timer-hours', 'timer-hours-modal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = hStr;
+      });
+      ['timer-minutes', 'timer-minutes-modal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = mStr;
+      });
+      ['timer-seconds', 'timer-seconds-modal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = sStr;
+      });
     }
 
     async function refreshDashboard() {
