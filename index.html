@@ -45,7 +45,7 @@
       background: #000000 !important;
     }
 
-    /* Mobiel Blokkeer Scherm (Alleen zichtbaar op schermen < 900px, scrollen uitgeschakeld) */
+    /* Mobiel Normaal Scherm (Alleen zichtbaar op schermen < 900px) */
     #mobile-blocker {
       display: none;
       position: fixed;
@@ -65,19 +65,18 @@
     .mobile-alarm-box {
       width: 100%;
       max-width: 420px;
-      background: rgba(25, 10, 15, 0.96);
-      border: 3px solid var(--alarm-red);
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+      border: 1px solid rgba(56, 189, 248, 0.3);
       border-radius: 16px;
-      padding: 2rem 1.5rem;
+      padding: 2.5rem 1.5rem;
       color: #fff;
-      box-shadow: 0 0 40px var(--alarm-red-glow);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(56, 189, 248, 0.15);
       backdrop-filter: blur(16px);
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       text-align: center;
-      animation: alarmPulse 0.8s infinite alternate ease-in-out;
     }
 
     @media (max-width: 900px) {
@@ -1036,13 +1035,11 @@
 </head>
 <body>
 
-  <!-- Mobiel Blokkeer Scherm -->
+  <!-- Mobiel Normaal Scherm -->
   <div id="mobile-blocker">
     <div class="mobile-alarm-box">
-      <div class="alarm-icon-container">🚨</div>
-      <div class="alarm-tag">⚠️ TOEGANG GEWEIGERD ⚠️</div>
-      <div class="toast-title">Mobiel Apparaat Gedetecteerd</div>
-      <div class="toast-body" style="margin-top: 0.5rem;">helaas, alleen op computer en tablet te bekijken</div>
+      <img src="https://images.squarespace-cdn.com/content/v1/51cdafc4e4b09eb676a64e68/1455062782638-O5OZ6Q2LKGVS7EVFENUH/image-asset.png" alt="Scouting Logo" style="max-height: 70px; width: auto; object-fit: contain; margin-bottom: 1.25rem; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));">
+      <div class="toast-body" style="font-size: 1.05rem; font-weight: 600; color: #f8fafc; line-height: 1.4;">Helaas, alleen zichtbaar op de computer en tablet.</div>
     </div>
   </div>
 
