@@ -4,17 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inlog Pin Point - VMG</title>
-  
-  <!-- Leaflet CSS voor de Map -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 
   <style>
     :root {
       --bg-overlay: rgba(15, 23, 42, 0.82);
-      --card-bg: rgba(30, 41, 59, 0.7);
       --card-border: rgba(255, 255, 255, 0.12);
       --text-main: #f8fafc;
-      --text-muted: #cbd5e1;
       --accent: #38bdf8;
       --accent-glow: rgba(56, 189, 248, 0.25);
       --alarm-red: #ef4444;
@@ -123,150 +118,31 @@
       gap: 1rem;
       height: calc(100vh - 65px);
       overflow: hidden;
+      justify-content: center;
+      align-items: center;
     }
 
-    #map {
+    .map-wrapper {
       flex: 1;
       width: 100%;
       height: 100%;
       border-radius: 12px;
       border: 1px solid var(--card-border);
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-      z-index: 1;
-    }
-
-    .sidebar {
-      width: 360px;
-      background: var(--card-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      display: flex;
-      flex-direction: column;
       overflow: hidden;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-      height: 100%;
+      background: rgba(30, 41, 59, 0.7);
     }
 
-    .sidebar-header {
-      padding: 0.85rem 1rem;
-      background: rgba(255, 255, 255, 0.05);
-      border-bottom: 1px solid var(--card-border);
-      font-weight: 600;
-      font-size: 0.95rem;
-      color: #fff;
-      flex-shrink: 0;
-    }
-
-    .sidebar-content {
-      padding: 1rem;
-      overflow-y: auto;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    .pin-card {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
-      padding: 0.8rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.3rem;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .pin-card:hover {
-      background: rgba(15, 23, 42, 0.9);
-      border-color: rgba(56, 189, 248, 0.4);
-    }
-
-    .pin-card-title {
-      font-weight: 700;
-      font-size: 0.95rem;
-      color: #fff;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .pin-card-body {
-      font-size: 0.825rem;
-      color: var(--text-muted);
-    }
-
-    .pin-card-footer {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 0.3rem;
-    }
-
-    .btn-delete {
-      background: rgba(239, 68, 68, 0.2);
-      border: 1px solid var(--alarm-red);
-      color: #fca5a5;
-      font-size: 0.7rem;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .btn-delete:hover {
-      background: rgba(239, 68, 68, 0.4);
-      color: #fff;
-    }
-
-    /* Popup Form Styling */
-    .leaflet-popup-content-wrapper {
-      background: rgba(30, 41, 59, 0.95) !important;
-      color: #fff !important;
-      border: 1px solid rgba(56, 189, 248, 0.4);
-      border-radius: 10px;
-      backdrop-filter: blur(10px);
-    }
-
-    .leaflet-popup-tip {
-      background: rgba(30, 41, 59, 0.95) !important;
-    }
-
-    .popup-form {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      padding: 0.2rem;
-    }
-
-    .popup-form input, .popup-form textarea {
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 6px;
-      padding: 0.4rem 0.6rem;
-      color: #fff;
-      font-size: 0.85rem;
-      outline: none;
+    .map-wrapper iframe {
       width: 100%;
-    }
-
-    .popup-form button {
-      background: linear-gradient(135deg, #38bdf8, #0284c7);
-      color: #0f172a;
-      font-weight: 700;
+      height: 100%;
       border: none;
-      border-radius: 6px;
-      padding: 0.4rem;
-      cursor: pointer;
-      font-size: 0.85rem;
     }
 
     @media (max-width: 900px) {
       body { height: auto; overflow: auto; }
       .main-container { flex-direction: column; height: auto; }
-      #map { height: 400px; }
-      .sidebar { width: 100%; height: 400px; }
+      .map-wrapper { height: 400px; }
     }
   </style>
 </head>
@@ -289,156 +165,10 @@
   </header>
 
   <div class="main-container">
-    <div id="map"></div>
-    
-    <div class="sidebar">
-      <div class="sidebar-header">
-        📍 Opgeslagen Vossen Pints (<span id="pin-count">0</span>)
-      </div>
-      <div class="sidebar-content" id="sidebar-pins-container">
-        <em>Laden van pins...</em>
-      </div>
+    <div class="map-wrapper">
+      <iframe src="https://www.google.com/maps/d/embed?mid=1EaxMNS3cAKvZRuIKI6lF95YR0PUqmT4&ehbc=2E312F&noprof=1" width="640" height="480"></iframe>
     </div>
   </div>
 
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
-  <script>
-    const map = L.map('map').setView([52.1326, 5.2913], 8);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-    let pins = [];
-    let mapMarkers = [];
-
-    // JSONbin endpoint voor gedeelde opslag
-    const BIN_URL = 'https://api.jsonbin.io/v3/b/67000000ae19d17d5c500000/latest'; 
-    // Opmerking: we gebruiken lokale simulatie als fallback of direct online laden
-    // Om het helemaal robuust en zonder API-sleutel te maken via een gratis public bin:
-    
-    async function loadPins() {
-      try {
-        const response = await fetch('https://api.npoint.io/462f5592182bb19b8893'); // Gedeelde openbare opslag
-        if (response.ok) {
-          const data = await response.json();
-          pins = data.pins || [];
-        }
-      } catch (e) {
-        console.warn('Kon online pins niet laden, val terug op lokaal:', e);
-        pins = JSON.parse(localStorage.getItem('joti_pin_points')) || [];
-      }
-      renderPins();
-    }
-
-    async function savePinsOnline() {
-      try {
-        await fetch('https://api.npoint.io/462f5592182bb19b8893', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pins: pins })
-        });
-      } catch (e) {
-        console.warn('Kon online niet opslaan:', e);
-      }
-      localStorage.setItem('joti_pin_points', JSON.stringify(pins));
-    }
-
-    function renderPins() {
-      mapMarkers.forEach(m => map.removeLayer(m));
-      mapMarkers = [];
-
-      const container = document.getElementById('sidebar-pins-container');
-      document.getElementById('pin-count').innerText = pins.length;
-
-      if (pins.length === 0) {
-        container.innerHTML = '<em>Nog geen pins geplaatst. Klik op de kaart om een vos te pinpointen.</em>';
-        return;
-      }
-
-      container.innerHTML = '';
-
-      pins.forEach((pin, index) => {
-        const marker = L.marker([pin.lat, pin.lng]).addTo(map);
-        marker.bindPopup(`<b>${pin.title}</b><br>${pin.note || 'Geen opmerking'}`);
-        mapMarkers.push(marker);
-
-        const card = document.createElement('div');
-        card.className = 'pin-card';
-        card.onclick = () => {
-          map.setView([pin.lat, pin.lng], 14);
-          marker.openPopup();
-        };
-
-        card.innerHTML = `
-          <div class="pin-card-title">
-            <span>🦊 ${pin.title}</span>
-          </div>
-          <div class="pin-card-body">${pin.note || '<em>Geen opmerking</em>'}</div>
-          <div class="pin-card-footer">
-            <button class="btn-delete" onclick="event.stopPropagation(); deletePin(${index})">Verwijderen</button>
-          </div>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    map.on('click', function(e) {
-      const { lat, lng } = e.latlng;
-
-      const popupContent = `
-        <div class="popup-form">
-          <h4>Vos Pinpointen</h4>
-          <input type="text" id="new-pin-title" placeholder="Titel (bijv. Vos Alpha)" required />
-          <textarea id="new-pin-note" placeholder="Opmerking (bijv. Laatst gezien)" rows="2"></textarea>
-          <button onclick="addNewPin(${lat}, ${lng})">Opslaan</button>
-        </div>
-      `;
-
-      L.popup()
-        .setLatLng([lat, lng])
-        .setContent(popupContent)
-        .openOn(map);
-    });
-
-    window.addNewPin = async function(lat, lng) {
-      const titleInput = document.getElementById('new-pin-title');
-      const noteInput = document.getElementById('new-pin-note');
-
-      const title = titleInput ? titleInput.value.trim() : '';
-      const note = noteInput ? noteInput.value.trim() : '';
-
-      if (!title) {
-        alert('Geef a.u.b. een titel op.');
-        return;
-      }
-
-      pins.push({ lat, lng, title, note });
-      await savePinsOnline();
-      renderPins();
-      map.closePopup();
-    };
-
-    window.deletePin = async function(index) {
-      if (confirm('Weet je zeker dat je deze pin wilt verwijderen?')) {
-        pins.splice(index, 1);
-        await savePinsOnline();
-        renderPins();
-      }
-    };
-
-    // Laad alle pins bij het openen van de pagina
-    loadPins();
-
-    // Automatisch elke 10 seconden verversen zodat je elkaars pinnen live ziet binnenkomen
-    setInterval(loadPins, 10000);
-
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 100);
-  </script>
 </body>
 </html>
