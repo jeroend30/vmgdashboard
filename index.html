@@ -1197,6 +1197,23 @@
     </div>
   </div>
 
+  <!-- Modal: Info / Dashboard Info -->
+  <div id="info-modal" class="menu-modal-overlay" onclick="closeInfoModal(event)">
+    <div class="menu-modal-box all-vossen-modal-box" onclick="event.stopPropagation()">
+      <div class="menu-modal-header">
+        <div class="menu-modal-title">ℹ️ Dashboard info</div>
+        <button class="menu-modal-close" onclick="closeInfoModal()">✕</button>
+      </div>
+      <div style="font-size: 0.95rem; line-height: 1.5; color: #f8fafc; display: flex; flex-direction: column; gap: 0.75rem; padding: 0.5rem 0; max-height: 60vh; overflow-y: auto;">
+        <p>Zie hier onze Jotihunt dashboard!<br>Nu hoeven we niet meer iedere keer op de website te kijken voor nieuwe berichten, hints of opdrachten.</p>
+        <br>
+        <p>Dit dashboard haalt iedere <strong>30 seconden</strong> nieuwe informatie van de Jotihunt website. Dus je kan het dashboard open zetten en hoeft zelf niets te doen.</p>
+        <br>
+        <p><strong>LET OP!</strong><br>Indien je laptop een VPN gebruikt deze graag uitzetten. Door een VPN kan je laptop sneller informatie opvragen dan de organisatie accepteert. Dit kan dan weer leiden tot een <strong>algehele IP ban</strong>. Dit zorgt er dan voor dat niemand meer op de Jotihunt website kan komen!</p>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: Timer (Einde Jotihunt Countdown) -->
   <div id="timer-modal" class="menu-modal-overlay" onclick="closeTimerModal(event)">
     <div class="menu-modal-box" style="max-width: 440px; padding: 0; overflow: hidden;" onclick="event.stopPropagation()">
@@ -1289,6 +1306,9 @@
     </div>
 
     <div class="header-right">
+      <button class="btn-popup" onclick="openInfoModal()">
+        ℹ️ info
+      </button>
       <button class="btn-popup" onclick="openTimerModal()">
         ⏳ Timer
       </button>
@@ -1586,6 +1606,16 @@
     function adminLogout() {
       sessionStorage.removeItem('joti_admin_auth');
       document.getElementById('admin-dashboard-modal').style.display = 'none';
+    }
+
+    function openInfoModal() {
+      document.getElementById('info-modal').style.display = 'flex';
+    }
+
+    function closeInfoModal(e) {
+      if (!e || e.target.id === 'info-modal') {
+        document.getElementById('info-modal').style.display = 'none';
+      }
     }
 
     function openMenuModal() {
