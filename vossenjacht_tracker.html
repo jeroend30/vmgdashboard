@@ -10,6 +10,7 @@
       --bg-overlay: rgba(15, 23, 42, 0.82);
       --card-border: rgba(255, 255, 255, 0.12);
       --text-main: #f8fafc;
+      --text-muted: #cbd5e1;
       --accent: #38bdf8;
       --accent-glow: rgba(56, 189, 248, 0.25);
       --alarm-red: #ef4444;
@@ -74,7 +75,15 @@
     .header-right {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.8rem;
+    }
+
+    .refresh-status {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
     }
 
     .btn-popup {
@@ -143,6 +152,8 @@
       body { height: auto; overflow: auto; }
       .main-container { flex-direction: column; height: auto; }
       .map-wrapper { height: 400px; }
+      .header-right { gap: 0.4rem; }
+      .refresh-status { display: none; }
     }
   </style>
 </head>
@@ -158,6 +169,7 @@
     </div>
 
     <div class="header-right">
+      <span class="refresh-status">🔄 Ververst elke 30s</span>
       <a href="https://jeroend30.github.io/vmgdashboard/" class="btn-popup btn-logout">
         🚪 Uitloggen
       </a>
@@ -170,5 +182,11 @@
     </div>
   </div>
 
+  <script>
+    // Automatisch verversen van de pagina elke 30 seconden (30000 milliseconden)
+    setTimeout(function() {
+      location.reload();
+    }, 30000);
+  </script>
 </body>
 </html>
