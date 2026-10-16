@@ -1264,6 +1264,21 @@
     </div>
   </div>
 
+  <!-- Modal: Ons Huntgebied (Charlie) -->
+  <div id="charlie-modal" class="menu-modal-overlay" onclick="closeCharlieModal(event)">
+    <div class="menu-modal-box all-vossen-modal-box" onclick="event.stopPropagation()">
+      <div class="menu-modal-header">
+        <div class="menu-modal-title">
+          🎯 Ons Huntgebied (Team Charlie)
+        </div>
+        <button class="menu-modal-close" onclick="closeCharlieModal()">✕</button>
+      </div>
+      <div id="charlie-modal-container" class="vossen-grid">
+        <em>Gegevens van Team Charlie laden...</em>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: Deelnemers / Subscriptions -->
   <div id="subscriptions-modal" class="menu-modal-overlay" onclick="closeSubscriptionsModal(event)">
     <div class="menu-modal-box all-vossen-modal-box" onclick="event.stopPropagation()">
@@ -1393,9 +1408,14 @@
             <img src="https://cdn-icons-png.flaticon.com/512/10748/10748571.png" alt="Vos Icon" class="header-icon">
             Status Vossenteams
           </span>
-          <button class="btn-popup" onclick="openAllVossenModal()">
-            🦊 Alle Vossen
-          </button>
+          <div style="display: flex; gap: 0.4rem; align-items: center;">
+            <button class="btn-popup" onclick="openCharlieModal()" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">
+              ons huntgebied
+            </button>
+            <button class="btn-popup" onclick="openAllVossenModal()" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">
+              🦊 Alle Vossen
+            </button>
+          </div>
         </div>
         <div class="column-content" id="container-areas" style="overflow: visible;">
           <em>Laden...</em>
@@ -1646,6 +1666,17 @@
 
     function closeAllVossenModal() {
       document.getElementById('all-vossen-modal').style.display = 'none';
+    }
+
+    function openCharlieModal() {
+      document.getElementById('charlie-modal').style.display = 'flex';
+      renderCharlieModal();
+    }
+
+    function closeCharlieModal(e) {
+      if (!e || e.target.id === 'charlie-modal') {
+        document.getElementById('charlie-modal').style.display = 'none';
+      }
     }
 
     function openSubscriptionsModal() {
@@ -2191,6 +2222,10 @@
         renderAllVossenModal();
       }
 
+      if (document.getElementById('charlie-modal').style.display === 'flex') {
+        renderCharlieModal();
+      }
+
       isFirstLoad = false;
     }
 
@@ -2245,6 +2280,86 @@
         `;
         container.appendChild(card);
       });
+    }
+
+    function renderCharlieModal() {
+      const container = document.getElementById('charlie-modal-container');
+      if (!container) return;
+
+      const charlieData = (allAreasData || []).find(item => {
+        const name = (item.name || item.area || '').toLowerCase();
+        return name === 'charlie';
+      });
+
+      if (!charlieData) {
+        container.innerHTML = '<em style="color: var(--text-muted); font-size: 0.85rem;">Gegevens van Team Charlie worden geladen...</em>';
+        return;
+      }
+
+      const currentStatus = charlieData.status || 'Onbekend';
+      const statusLower = currentStatus.toLowerCase();
+      const statusClass = `status-${statusLower}`;
+      const bgStatusClass = `bg-status-${statusLower}`;
+
+      const groupsData = charlieData.groups || charlieData.scoutinggroups || charlieData.info || charlieData.members || [];
+      let groupsText = '';
+      if (Array.isArray(groupsData) && groupsData.length > 0) {
+        groupsText = groupsData.map(g => typeof g === 'string' ? g : (g.name || g.title || '')).filter(Boolean).join(', ');
+      } else if (typeof groupsData === 'string' && groupsData.trim() !== '') {
+        groupsText = groupsData;
+      }
+
+      // Relevante vossenteams voor onderaan: alpha, bravo, charlie, echo, golf, hotel
+      const targetTeams = ['alpha', 'bravo', 'charlie', 'echo', 'golf', 'hotel'];
+      let miniTeamsHtml = `
+        <div style="margin-top: 0.75rem; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 0.75rem;">
+          <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">Statussen geselecteerde vossen:</div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
+      `;
+
+      targetTeams.forEach(teamKey => {
+        const teamObj = (allAreasData || []).find(item => (item.name || item.area || '').toLowerCase() === teamKey);
+        const name = teamKey.toUpperCase();
+        const tStatus = teamObj ? (teamObj.status || 'Onbekend') : 'Onbekend';
+        const tStatusLower = tStatus.toLowerCase();
+        const tBgClass = `bg-status-${tStatusLower}`;
+        const tStatusClass = `status-${tStatusLower}`;
+
+        miniTeamsHtml += `
+          <div class="item-card ${tBgClass}" style="padding: 0.4rem 0.5rem; gap: 0.2rem; cursor: default; font-size: 0.75rem;">
+            <div style="font-weight: 700; color: #fff; font-size: 0.75rem; text-align: center; text-transform: uppercase;">
+              ${name}
+            </div>
+            <div style="text-align: center;">
+              <span class="status-pill ${tStatusClass}" style="font-size: 0.6rem; padding: 0.1rem 0.3rem; display: inline-block; width: 100%;">${tStatus}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      miniTeamsHtml += `
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = `
+        <div class="item-card ${bgStatusClass} charlie-highlight" style="cursor: default;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="item-title charlie-title">
+              🎯 CHARLIE <span class="charlie-badge">ONS DEELGEBIED</span>
+            </span>
+            <span class="status-pill ${statusClass}">${currentStatus}</span>
+          </div>
+          ${groupsText ? `<div class="scouting-groups-tag">📍 Groepen: ${groupsText}</div>` : ''}
+          <div class="item-meta" style="margin-top: 0.5rem;">
+            <span>Laatste update: ${formatDate(charlieData.updated_at || charlieData.updatedAt)}</span>
+          </div>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; line-height: 1.4; background: rgba(15, 23, 42, 0.4); padding: 0.6rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
+          Dit is jullie eigen toegewezen huntgebied (Team Charlie). Hier kun je direct de actuele status en gekoppelde scoutinggroepen bekijken.
+        </div>
+        ${miniTeamsHtml}
+      `;
     }
 
     async function renderSubscriptionsModal() {
