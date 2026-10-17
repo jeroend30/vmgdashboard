@@ -294,7 +294,6 @@
       display: none;
     }
 
-    /* Menu / Instellingen Modal & General Modals */
     .menu-modal-overlay {
       position: fixed;
       top: 0;
@@ -657,7 +656,6 @@
       gap: 0.65rem;
     }
 
-    /* Donkere items/berichten uit de API */
     .item-card {
       background: rgba(10, 15, 25, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -744,12 +742,6 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-    }
-
-    .item-body {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      line-height: 1.35;
     }
 
     .type-badge {
@@ -1273,7 +1265,7 @@
       </div>
     </div>
 
-    <!-- RECHTS: Vossenteams & Kaart (Alle deelnemers) -->
+    <!-- RECHTS: Vossenteams & Hoofdopdrachten -->
     <div class="column" id="column-right-fixed">
       <div class="card-panel compact-teams">
         <div id="notification-container-areas" class="notification-overlay"></div>
@@ -1299,13 +1291,28 @@
 
       <div class="card-panel full-height" id="all-participants-card-panel">
         <div class="column-header">
-          <span>alle deelnemers</span>
-          <button class="btn-popup" onclick="openSubscriptionsModal()" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">
-            👥 lijst
-          </button>
+          <span>Hoofdopdrachten</span>
+          <span class="badge">6</span>
         </div>
-        <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden; background: rgba(15, 23, 42, 0.6);">
-          <iframe src="https://www.google.com/maps/d/embed?mid=1EaxMNS3cAKvZRuIKI6lF95YR0PUqmT4&ehbc=2E312F&noprof=1" width="100%" height="100%" style="border:0; flex: 1;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <div class="column-content" style="overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; background: rgba(15, 23, 42, 0.6);">
+          <div class="item-card" style="cursor: default; padding: 0.6rem 0.8rem;">
+            <div class="item-title" style="font-size: 0.85rem;">1. Casino</div>
+          </div>
+          <div class="item-card" style="cursor: default; padding: 0.6rem 0.8rem;">
+            <div class="item-title" style="font-size: 0.85rem;">2. Autodealer</div>
+          </div>
+          <div class="item-card" style="cursor: default; padding: 0.6rem 0.8rem;">
+            <div class="item-title" style="font-size: 0.85rem;">3. Slijterij</div>
+          </div>
+          <div class="item-card" style="cursor: default; padding: 0.6rem 0.8rem;">
+            <div class="item-title" style="font-size: 0.85rem;">4. Manege</div>
+          </div>
+          <div class="item-card" style="cursor: default; padding: 0.6rem 0.8rem;">
+            <div class="item-title" style="font-size: 0.85rem;">5. Slot/kasteel/fort</div>
+          </div>
+          <div class="item-card" style="cursor: default; padding: 0.6rem 0.8rem;">
+            <div class="item-title" style="font-size: 0.85rem;">6. Voetbalclub</div>
+          </div>
         </div>
       </div>
     </div>
@@ -2000,7 +2007,25 @@
         });
       }
 
-      const allCombinedAssignments = Array.from(combinedMap.values());
+      const mainQuestTitles = [
+        "casino", 
+        "autodealer", 
+        "slijterij", 
+        "restaurant de beren", 
+        "beren", 
+        "manege", 
+        "slot/kasteel/fort", 
+        "slot", 
+        "kasteel", 
+        "fort", 
+        "voetbalclub"
+      ];
+
+      const allCombinedAssignments = Array.from(combinedMap.values()).filter(item => {
+        const titleLower = (item.title || "").toLowerCase();
+        return !mainQuestTitles.some(q => titleLower.includes(q));
+      });
+
       document.getElementById('count-photos').innerText = allCombinedAssignments.length;
       container.innerHTML = '';
 
@@ -2047,7 +2072,6 @@
             <span>${item.points ? 'Punten: ' + item.points : 'Geplaatst: ' + formatDate(item.publish_at || item.created_at)}</span>
             <span>${item.end_at ? 'Eindigt: ' + formatDate(item.end_at) : ''}</span>
           </div>
-          <div class="item-body">${item.description || item.content || ''}</div>
           <div class="card-footer-right">
             ${remainingInfo ? `
               <span class="time-remaining-badge ${remainingInfo.isUrgent ? 'urgent' : ''}">
@@ -2264,34 +2288,35 @@
       `;
     }
 
-    async function renderSubscriptionsModal() {
+    function renderSubscriptionsModal() {
       const container = document.getElementById('subscriptions-container');
       if (!container) return;
 
       container.innerHTML = '<em style="color: var(--text-muted); font-size: 0.85rem;">Deelnemers laden...</em>';
       
-      const data = await fetchData('subscriptions');
-      if (!data || data.length === 0) {
-        container.innerHTML = '<em style="color: var(--text-muted); font-size: 0.85rem;">Geen deelnemers gevonden.</em>';
-        return;
-      }
+      fetchData('subscriptions').then(data => {
+        if (!data || data.length === 0) {
+          container.innerHTML = '<em style="color: var(--text-muted); font-size: 0.85rem;">Geen deelnemers gevonden.</em>';
+          return;
+        }
 
-      container.innerHTML = '';
+        container.innerHTML = '';
 
-      data.forEach(item => {
-        const name = item.name || item.fullname || item.username || 'Deelnemer';
-        const role = item.role || item.type || 'Deelnemer';
-        
-        const card = document.createElement('div');
-        card.className = 'item-card';
-        card.innerHTML = `
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span class="item-title">${name}</span>
-            <span class="type-badge type-default">${role}</span>
-          </div>
-          ${item.email ? `<div class="item-meta" style="margin-top: 0.2rem;"><span>E-mail: ${item.email}</span></div>` : ''}
-        `;
-        container.appendChild(card);
+        data.forEach(item => {
+          const name = item.name || item.fullname || item.username || 'Deelnemer';
+          const role = item.role || item.type || 'Deelnemer';
+          
+          const card = document.createElement('div');
+          card.className = 'item-card';
+          card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="item-title">${name}</span>
+              <span class="type-badge type-default">${role}</span>
+            </div>
+            ${item.email ? `<div class="item-meta" style="margin-top: 0.2rem;"><span>E-mail: ${item.email}</span></div>` : ''}
+          `;
+          container.appendChild(card);
+        });
       });
     }
 
